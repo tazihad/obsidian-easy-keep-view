@@ -1,11 +1,11 @@
 {
-	"id": "sample-plugin",
-	"name": "Sample Plugin",
+	"id": "easy-keep-view",
+	"name": "Easy Keep View",
 	"version": "1.0.0",
 	"minAppVersion": "0.15.0",
-	"description": "Demonstrates some of the capabilities of the Obsidian API.",
-	"author": "Obsidian",
-	"authorUrl": "https://obsidian.md",
+	"description": "An Obsidian plugin that mimics the Google Keep interface, allowing you to view and manage your notes with image thumbnails and excerpts.",
+	"author": "@tazihad",
+	"authorUrl": "https://github.com/zihad007",
 	"fundingUrl": "https://obsidian.md/pricing",
 	"isDesktopOnly": false
 }
