@@ -132,24 +132,24 @@ class EasyKeepView extends ItemView {
 		style.innerText = `
 		.easy-keep-cards-container {
 			display: grid;
-			grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-			gap: 16px;
-			padding: 10px;
+			grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+			gap: 12px;
+			padding: 8px;
 		}
 		.easy-keep-card {
-			width: 280px;
-			min-height: 160px;
-			padding: 16px;
+			width: 100%;
+			min-height: 120px;
+			padding: 12px;
 			border: 1px solid ${borderColor};
 			border-radius: 8px;
 			background-color: ${bgColor};
-			box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
 			cursor: pointer;
 			color: ${textColor};
 			display: flex;
 			flex-direction: column;
 			justify-content: space-between;
-			transition: transform 0.1s ease-in-out, width 0.2s ease;
+			transition: transform 0.1s ease-in-out;
 		}
 		.easy-keep-card:hover {
 			transform: scale(1.02);
@@ -170,10 +170,10 @@ class EasyKeepView extends ItemView {
 		}
 		.easy-keep-thumbnail {
 			max-width: 100%;
-			max-height: 100px;
+			max-height: 80px;
 			object-fit: cover;
 			border-radius: 4px;
-			margin-top: 8px;
+			margin-top: 6px;
 			display: block;
 		}
 		.new-note-card {
@@ -196,6 +196,26 @@ class EasyKeepView extends ItemView {
 				width: 90%;
 			}
 		}
+
+		@media (max-width: 480px) {
+			.easy-keep-cards-container {
+				grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+				gap: 8px;
+				padding: 6px;
+			}
+			.easy-keep-card {
+				padding: 8px;
+				min-height: 100px;
+			}
+			.easy-keep-card h3 {
+				font-size: 16px;
+			}
+			.easy-keep-card p {
+				font-size: 13px;
+			}
+		}
+
+
 		`;
 		document.head.appendChild(style);
 	}
