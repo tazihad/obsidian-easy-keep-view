@@ -1,6 +1,6 @@
 # Easy Keep View
 
-**Easy Keep View** is an Obsidian plugin that mimics the Google Keep interface, allowing you to view and manage your notes with image thumbnails and excerpts.
+**Easy Keep View** is a plugin that mimics the Google Keep interface, allowing you to view and manage your notes with image thumbnails and excerpts.
 
 ![Screenshot](assets/Screenshot_20250410_035221.png)
 
