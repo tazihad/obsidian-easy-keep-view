@@ -24,13 +24,17 @@ interface MyPluginSettings {
 	mySetting: string;
 	notesDB: NoteEntry[];
 	themeMode: "system" | "light" | "dark";
+	openAsHomepage: boolean;
 }
 
 const DEFAULT_SETTINGS: MyPluginSettings = {
 	mySetting: "default",
 	notesDB: [],
 	themeMode: "system",
+	openAsHomepage: false,
 };
+
+
 
 // Helper function to resolve image by name
 function resolveImageByName(app: App, imageName: string): TFile | null {
@@ -172,7 +176,10 @@ class SampleSettingTab extends PluginSettingTab {
 	display(): void {
 		const { containerEl } = this;
 		containerEl.empty();
+
 		containerEl.createEl("h2", { text: "Easy Keep View Plugin Settings" });
+
+		// Theme mode selector
 		new Setting(containerEl)
 		.setName("Theme Mode")
 		.setDesc("Select a theme mode for the Easy Keep View")
@@ -187,8 +194,22 @@ class SampleSettingTab extends PluginSettingTab {
 				this.plugin.refreshEasyKeepViewIfOpen();
 			});
 		});
+
+		// Homepage toggle
+		new Setting(containerEl)
+		.setName("Use Easy Keep View as Home Page")
+		.setDesc("Automatically open Easy Keep View when Obsidian starts")
+		.addToggle(toggle => {
+			toggle.setValue(this.plugin.settings.openAsHomepage);
+			toggle.onChange(async (value) => {
+				this.plugin.settings.openAsHomepage = value;
+				await this.plugin.saveSettings();
+				new Notice("Restart Obsidian to apply the homepage setting.");
+			});
+		});
 	}
 }
+
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
@@ -200,7 +221,12 @@ export default class MyPlugin extends Plugin {
 		this.app.workspace.onLayoutReady(async () => {
 			await this.cleanDatabase();
 			this.refreshEasyKeepViewIfOpen();
+
+			if (this.settings.openAsHomepage) {
+				await this.activateEasyKeepView();
+			}
 		});
+
 
 		this.registerView(VIEW_TYPE_EASY_KEEP, (leaf) => new EasyKeepView(leaf, this));
 
