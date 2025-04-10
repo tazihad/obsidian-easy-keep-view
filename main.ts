@@ -239,7 +239,7 @@ export default class MyPlugin extends Plugin {
 
 		this.registerView(VIEW_TYPE_EASY_KEEP, (leaf) => new EasyKeepView(leaf, this));
 
-		const ribbonIconEl = this.addRibbonIcon("dice", "Easy Keep View", () => {
+		const ribbonIconEl = this.addRibbonIcon("sticky-note", "Easy Keep View", () => {
 			this.activateEasyKeepView();
 		});
 		ribbonIconEl.addClass("my-plugin-ribbon-class");
