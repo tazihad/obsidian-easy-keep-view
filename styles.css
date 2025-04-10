@@ -1,8 +1,182 @@
-/*
+/* styles.css */
 
-This CSS file will be included with your plugin, and
-available in the app when your plugin is enabled.
+/* Container for all cards */
+.easy-keep-cards-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+    padding: 12px;
+}
 
-If your plugin does not need CSS, delete this file.
+/* Individual note card */
+.easy-keep-card {
+    width: 100%;
+    min-height: 140px;
+    padding: 16px;
+    border: 1px solid var(--border-color, #ddd);
+    border-radius: 12px;
+    background-color: var(--bg-color, #f9f9f9);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    color: var(--text-color, #333);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: transform 0.2s ease-in-out, box-shadow 0.3s ease;
+}
 
-*/
+/* Hover effects for the cards */
+.easy-keep-card:hover {
+    transform: scale(1.05);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+}
+
+/* Title of each card: reduced size */
+.easy-keep-card h3 {
+    font-size: 15px;
+    font-weight: 700; /* Keep it bold */
+    margin-bottom: 8px;
+    color: var(--heading-color, #333);
+    line-height: 1.2;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+
+
+/* Excerpt of the note */
+.easy-keep-card p {
+    font-size: 12.5px; /* Make excerpt smaller */
+    color: var(--text-color, #555);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    margin: 0;
+}
+
+
+/* Thumbnail image styling */
+.easy-keep-thumbnail {
+    max-width: 100%;
+    max-height: 90px;
+    object-fit: cover;
+    border-radius: 6px;
+    margin-top: 8px;
+    display: block;
+}
+
+/* Styling for the "new note" card */
+.new-note-card {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    border: 2px dashed var(--border-color, #ddd);
+    padding: 16px;
+    background-color: var(--new-note-bg, #f3f3f3);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    color: var(--new-note-text-color, #555);
+    cursor: pointer;
+}
+
+.new-note-card h3 {
+    font-size: 32px;
+    margin-bottom: 8px;
+    color: var(--new-note-text-color, #555);
+}
+
+.new-note-card p {
+    font-size: 18px;
+    text-align: center;
+    font-weight: 500;
+}
+
+/* No notes available message */
+.no-history-message {
+    font-size: 20px;
+    color: var(--text-color, #555);
+    text-align: center;
+    padding: 20px;
+    width: 100%;
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+    .easy-keep-cards-container {
+        grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+        gap: 12px;
+    }
+
+    .easy-keep-card {
+        padding: 14px;
+        min-height: 120px;
+    }
+
+    .easy-keep-card h3 {
+        font-size: 16px;
+    }
+
+    .easy-keep-card p {
+        font-size: 14px;
+    }
+
+    .new-note-card {
+        padding: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .easy-keep-cards-container {
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+        gap: 8px;
+        padding: 8px;
+    }
+
+    .easy-keep-card {
+        padding: 10px;
+        min-height: 100px;
+    }
+
+    .easy-keep-card h3 {
+        font-size: 14px; /* Even smaller on the very smallest screens */
+    }
+
+    .easy-keep-card p {
+        font-size: 13px;
+    }
+
+    .new-note-card {
+        padding: 12px;
+    }
+}
+
+/* Dark theme mode */
+@media (prefers-color-scheme: dark) {
+    .easy-keep-card {
+        background-color: var(--bg-dark, #2c2c2c);
+        border-color: var(--border-dark, #444);
+        color: var(--text-dark, #ccc);
+    }
+
+    .easy-keep-card h3 {
+        color: var(--heading-dark, #fff);
+    }
+
+    .easy-keep-card p {
+        color: var(--text-dark, #ccc);
+    }
+
+    .new-note-card {
+        background-color: var(--new-note-dark-bg, #333);
+        border-color: var(--border-dark, #444);
+    }
+
+    .no-history-message {
+        color: var(--text-dark, #ccc);
+    }
+}

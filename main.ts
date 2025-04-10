@@ -1,13 +1,14 @@
 import {
 	App,
 	Plugin,
-	Notice,
 	WorkspaceLeaf,
 	ItemView,
 	TFile,
 	PluginSettingTab,
 	Setting,
 } from "obsidian";
+
+import "./styles.css";
 
 const VIEW_TYPE_EASY_KEEP = "easy-keep-view";
 
@@ -16,7 +17,8 @@ interface NoteEntry {
 	title: string;
 	excerpt: string;
 	time: number;
-	imagePath?: string;
+	// Store the raw image embed (e.g. "Antora-Pramanik.jpg" or "testfolder/Antora-Pramanik.jpg")
+	imageLink?: string;
 }
 
 interface MyPluginSettings {
@@ -30,6 +32,27 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	notesDB: [],
 	themeMode: "system",
 };
+
+// Fallback helper: search vault for an image file by matching the basename (ignoring extension)
+function resolveImageByName(app: App, imageName: string): TFile | null {
+	const target = imageName.replace(/\.(jpg|jpeg|png|webp)$/i, "").toLowerCase();
+	const candidates = app.vault.getFiles().filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f.name));
+	for (const file of candidates) {
+		if (file.basename.toLowerCase() === target) {
+			return file;
+		}
+	}
+	return null;
+}
+
+// Simple debounce helper
+function debounce(fn: (...args: any[]) => void, delay = 300): (...args: any[]) => void {
+	let timer: NodeJS.Timeout;
+	return (...args: any[]) => {
+		clearTimeout(timer);
+		timer = setTimeout(() => fn(...args), delay);
+	};
+}
 
 class EasyKeepView extends ItemView {
 	plugin: MyPlugin;
@@ -48,43 +71,53 @@ class EasyKeepView extends ItemView {
 		return "Easy Keep View";
 	}
 
-	buildContent() {
+	async buildContent() {
 		this.mainContainer.empty();
 		this.mainContainer.style.overflowY = "auto";
 		this.mainContainer.style.height = "100%";
 
 		const cardContainer = this.mainContainer.createDiv("easy-keep-cards-container");
 
+		// New Note Card
 		const newNoteCard = cardContainer.createDiv("easy-keep-card new-note-card");
 		newNoteCard.createEl("h3", { text: "+" });
 		newNoteCard.createEl("p", { text: "Add New Note" });
+		newNoteCard.onclick = () => this.plugin.createNewNote();
 
-		newNoteCard.onclick = () => {
-			this.plugin.createNewNote();
-		};
+		// Before building cards, refresh thumbnails from note content.
+		await this.plugin.refreshThumbnails();
 
-		let notes = this.plugin.settings.notesDB.slice().sort((a, b) => b.time - a.time).slice(0, 20);
+		let notes = this.plugin.settings.notesDB.slice()
+		.sort((a, b) => b.time - a.time)
+		.slice(0, 20);
 
 		if (notes.length) {
 			notes.forEach(note => {
 				const card = cardContainer.createDiv("easy-keep-card");
 				card.createEl("h3", { text: note.title });
 
-				if (note.imagePath) {
-					const resourcePath = this.app.vault.adapter.getResourcePath(note.imagePath);
-					const img = card.createEl("img", { cls: "easy-keep-thumbnail" });
-					img.src = resourcePath;
-
-					img.onerror = () => {
-						img.remove();
-						if (note.excerpt) {
-							card.createEl("p", { text: note.excerpt });
-						}
-					};
-
-					img.onload = () => {
-						console.log(`[Render] Image loaded: ${resourcePath}`);
-					};
+				if (note.imageLink) {
+					// Try resolving the image using the metadata cache relative to the note.
+					let file = this.app.metadataCache.getFirstLinkpathDest(note.imageLink, note.path);
+					if (!(file instanceof TFile)) {
+						// Fallback: search by name.
+						file = resolveImageByName(this.app, note.imageLink);
+					}
+					if (file instanceof TFile) {
+						const resourcePath = this.app.vault.getResourcePath(file);
+						const img = card.createEl("img", { cls: "easy-keep-thumbnail" });
+						img.src = resourcePath;
+						img.onerror = () => {
+							console.warn("[Easy Keep View] Failed to load thumbnail:", resourcePath);
+							img.remove();
+							if (note.excerpt) card.createEl("p", { text: note.excerpt });
+						};
+						img.onload = () => {
+							console.log("[Easy Keep View] Thumbnail loaded:", resourcePath);
+						};
+					} else if (note.excerpt) {
+						card.createEl("p", { text: note.excerpt });
+					}
 				} else {
 					if (note.excerpt) {
 						card.createEl("p", { text: note.excerpt });
@@ -97,131 +130,27 @@ class EasyKeepView extends ItemView {
 			const noHistory = cardContainer.createDiv("no-history-message");
 			noHistory.setText("No notes, create a new one!");
 		}
-
-		this.injectCSS();
 	}
 
-	refreshContent() {
-		this.buildContent();
+	async refreshContent() {
+		await this.buildContent();
 	}
 
 	async onOpen() {
 		this.mainContainer = this.containerEl;
-		this.buildContent();
+		await this.buildContent();
+		this.loadCSS();
+	}
+
+	loadCSS() {
+		const link = document.createElement("link");
+		link.rel = "stylesheet";
+		link.href = `${this.plugin.manifest.dir}/assets/styles.css`;
+		document.head.appendChild(link);
 	}
 
 	async onClose() {}
-
-	injectCSS() {
-		const existingStyle = document.getElementById("easy-keep-css");
-		if (existingStyle) existingStyle.remove();
-
-		let bgColor = "#f9f9f9";
-		let borderColor = "#ddd";
-		let textColor = "#555";
-		const theme = this.plugin.settings.themeMode;
-
-		if (theme === "dark" || (theme === "system" && document.body.hasClass("theme-dark"))) {
-			bgColor = "#333";
-			borderColor = "#555";
-			textColor = "#ccc";
-		}
-
-		const style = document.createElement("style");
-		style.id = "easy-keep-css";
-		style.innerText = `
-		.easy-keep-cards-container {
-			display: grid;
-			grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-			gap: 12px;
-			padding: 8px;
-		}
-		.easy-keep-card {
-			width: 100%;
-			min-height: 120px;
-			padding: 12px;
-			border: 1px solid ${borderColor};
-			border-radius: 8px;
-			background-color: ${bgColor};
-			box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
-			cursor: pointer;
-			color: ${textColor};
-			display: flex;
-			flex-direction: column;
-			justify-content: space-between;
-			transition: transform 0.1s ease-in-out;
-		}
-		.easy-keep-card:hover {
-			transform: scale(1.02);
-		}
-		.easy-keep-card h3 {
-			font-size: 18px;
-			margin-bottom: 8px;
-		}
-		.easy-keep-card p {
-			font-size: 14px;
-			color: ${textColor};
-			overflow: hidden;
-			text-overflow: ellipsis;
-			display: -webkit-box;
-			-webkit-line-clamp: 2;
-			-webkit-box-orient: vertical;
-			margin: 0;
-		}
-		.easy-keep-thumbnail {
-			max-width: 100%;
-			max-height: 80px;
-			object-fit: cover;
-			border-radius: 4px;
-			margin-top: 6px;
-			display: block;
-		}
-		.new-note-card {
-			display: flex;
-			align-items: center;
-			justify-content: center;
-			flex-direction: column;
-			border: 2px dashed ${borderColor};
-		}
-		.no-history-message {
-			font-size: 20px;
-			color: ${textColor};
-			text-align: center;
-			padding: 20px;
-			width: 100%;
-		}
-
-		@media (max-width: 600px) {
-			.easy-keep-card {
-				width: 90%;
-			}
-		}
-
-		@media (max-width: 480px) {
-			.easy-keep-cards-container {
-				grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-				gap: 8px;
-				padding: 6px;
-			}
-			.easy-keep-card {
-				padding: 8px;
-				min-height: 100px;
-			}
-			.easy-keep-card h3 {
-				font-size: 16px;
-			}
-			.easy-keep-card p {
-				font-size: 13px;
-			}
-		}
-
-
-		`;
-		document.head.appendChild(style);
-	}
 }
-
-
 
 class SampleSettingTab extends PluginSettingTab {
 	plugin: MyPlugin;
@@ -252,6 +181,7 @@ class SampleSettingTab extends PluginSettingTab {
 
 export default class MyPlugin extends Plugin {
 	settings: MyPluginSettings;
+	private refreshDebounced: () => void;
 
 	async onload() {
 		await this.loadSettings();
@@ -264,20 +194,23 @@ export default class MyPlugin extends Plugin {
 		});
 		ribbonIconEl.addClass("my-plugin-ribbon-class");
 
+		// Refresh on file-open events.
 		this.registerEvent(this.app.workspace.on("file-open", async (file) => {
 			if (file) {
 				await this.addToDatabase(file);
-				this.refreshEasyKeepViewIfOpen();
+				this.refreshDebounced();
 			}
 		}));
 
+		// Refresh on file deletion.
 		this.registerEvent(this.app.vault.on("delete", async (file) => {
 			if (file instanceof TFile) {
 				await this.removeFromDatabase(file.path);
-				this.refreshEasyKeepViewIfOpen();
+				this.refreshDebounced();
 			}
 		}));
 
+		// Refresh on file rename for notes.
 		this.registerEvent(this.app.vault.on("rename", async (file, oldPath) => {
 			if (file instanceof TFile) {
 				const entryIndex = this.settings.notesDB.findIndex(e => e.path === oldPath);
@@ -285,38 +218,38 @@ export default class MyPlugin extends Plugin {
 					this.settings.notesDB[entryIndex].path = file.path;
 					this.settings.notesDB[entryIndex].title = file.basename;
 					await this.saveSettings();
-					this.refreshEasyKeepViewIfOpen();
+					this.refreshDebounced();
 				}
 			}
 		}));
 
+		// Refresh on file rename for image files.
 		this.registerEvent(this.app.vault.on("rename", async (file, oldPath) => {
-			if (file instanceof TFile) {
-				// Update renamed note file
-				const entryIndex = this.settings.notesDB.findIndex(e => e.path === oldPath);
-				if (entryIndex !== -1) {
-					this.settings.notesDB[entryIndex].path = file.path;
-					this.settings.notesDB[entryIndex].title = file.basename;
-					await this.saveSettings();
-					this.refreshEasyKeepViewIfOpen();
-				}
-
-				// Update renamed image file
-				if (/\.(jpg|jpeg|png|webp)$/i.test(file.path)) {
-					let updated = false;
-					this.settings.notesDB.forEach(entry => {
-						if (entry.imagePath === oldPath) {
-							entry.imagePath = file.path;
-							updated = true;
-						}
-					});
-					if (updated) {
-						await this.saveSettings();
-						this.refreshEasyKeepViewIfOpen();
+			if (file instanceof TFile && /\.(jpg|jpeg|png|webp)$/i.test(file.path)) {
+				let updated = false;
+				this.settings.notesDB.forEach(entry => {
+					if (entry.imageLink === oldPath) {
+						entry.imageLink = file.path;
+						updated = true;
 					}
+				});
+				if (updated) {
+					await this.saveSettings();
+					this.refreshDebounced();
 				}
 			}
 		}));
+
+		// New: Listen for modify events to update thumbnail info when note content changes.
+		this.registerEvent(this.app.vault.on("modify", async (file) => {
+			if (file instanceof TFile) {
+				await this.addToDatabase(file);
+				this.refreshDebounced();
+			}
+		}));
+
+		// Initialize debounce for refresh calls.
+		this.refreshDebounced = debounce(() => this.refreshEasyKeepViewIfOpen(), 300);
 
 		this.addSettingTab(new SampleSettingTab(this.app, this));
 	}
@@ -337,38 +270,57 @@ export default class MyPlugin extends Plugin {
 		this.app.workspace.revealLeaf(leaf);
 	}
 
-	refreshEasyKeepViewIfOpen() {
+	async refreshEasyKeepViewIfOpen() {
 		const existingLeaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_EASY_KEEP);
 		if (existingLeaves.length > 0) {
 			const view = existingLeaves[0].view as EasyKeepView;
-			view.refreshContent();
+			await view.refreshContent();
 		}
 	}
 
+	/**
+	 * Checks each note’s first nonempty line for an image embed pattern.
+	 * If found, update the note's imageLink in the database.
+	 */
+	async refreshThumbnails() {
+		for (const note of this.settings.notesDB) {
+			const file = this.app.vault.getAbstractFileByPath(note.path);
+			if (!(file instanceof TFile)) continue;
+			const content = await this.app.vault.cachedRead(file);
+			const firstNonEmptyLine = content.split("\n").find(line => line.trim() !== "");
+			if (firstNonEmptyLine) {
+				const match = firstNonEmptyLine.match(/!\[\[([^\]]+)\]\]/);
+				if (match) {
+					const newLink = match[1].trim();
+					if (note.imageLink !== newLink) {
+						note.imageLink = newLink;
+					}
+				}
+			}
+		}
+		await this.saveSettings();
+	}
+
+	/**
+	 * Save note info (including raw image embed) to the database.
+	 */
 	async addToDatabase(file: TFile) {
 		const content = await this.app.vault.cachedRead(file);
 		const lines = content.trim().split("\n").filter(line => line.trim() !== "");
 		let excerpt = "";
-		let imagePath: string | undefined;
+		let imageLink: string | undefined;
 
 		if (/\.(jpg|jpeg|png|webp)$/i.test(file.path)) {
-			imagePath = file.path;
+			imageLink = file.path;
 		} else {
-			const imageMatch = content.match(/!\[.*?\]\((.*?)\)|\!\[\[(.*?)\]\]/i);
-			if (imageMatch) {
-				imagePath = imageMatch[1] || imageMatch[2];
-				if (imagePath && !imagePath.startsWith("http") && !imagePath.startsWith("/")) {
-					const fileFolder = file.path.substring(0, file.path.lastIndexOf("/"));
-					imagePath = `${fileFolder}/${imagePath}`.replace(/\/+/g, "/");
-				}
-				const imageFile = this.app.vault.getAbstractFileByPath(imagePath);
-				if (!(imageFile instanceof TFile && /\.(jpg|jpeg|png|webp)$/i.test(imagePath))) {
-					imagePath = undefined;
-				}
+			const obsidianEmbedMatch = content.match(/!\[\[([^\]]+)\]\]/);
+			const markdownImageMatch = content.match(/!\[.*?\]\((.*?)\)/);
+			if (obsidianEmbedMatch || markdownImageMatch) {
+				imageLink = (obsidianEmbedMatch?.[1] || markdownImageMatch?.[1])?.trim();
 			}
 		}
 
-		if (!imagePath && lines.length > 0) {
+		if (!imageLink && lines.length > 0) {
 			excerpt = lines.slice(0, 2).join(" ");
 			if (lines.length > 2) excerpt = excerpt.trim() + " …";
 		}
@@ -379,7 +331,7 @@ export default class MyPlugin extends Plugin {
 			title: titleWithoutExt,
 			excerpt,
 			time: Date.now(),
-			imagePath,
+			imageLink,
 		};
 
 		this.settings.notesDB = this.settings.notesDB.filter(entry => entry.path !== file.path);
@@ -405,14 +357,12 @@ export default class MyPlugin extends Plugin {
 	async openNoteInNewTab(filePath: string) {
 		const file = this.app.vault.getAbstractFileByPath(filePath);
 		if (!(file instanceof TFile)) return;
-
 		let existingLeaf: WorkspaceLeaf | null = null;
 		this.app.workspace.iterateAllLeaves(leaf => {
 			if (leaf.view.getViewType() === "markdown" && (leaf.view as any).file?.path === filePath) {
 				existingLeaf = leaf;
 			}
 		});
-
 		if (existingLeaf) {
 			this.app.workspace.setActiveLeaf(existingLeaf, { focus: true });
 		} else {
