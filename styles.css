@@ -1,7 +1,7 @@
 /* Container for all cards */
 .easy-keep-cards-container {
     display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(125px, 1fr)); /* Reduce the min width to 50% of the original size */
+    grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
     gap: 16px;
     padding: 12px;
     box-sizing: border-box;
@@ -10,8 +10,8 @@
 /* Individual note card */
 .easy-keep-card {
     width: 100%;
-    min-height: 160px; /* Reduced height */
-    padding: 8px; /* Padding for smaller box */
+    min-height: 160px; /* Adjusted card size */
+    padding: 8px;
     border: 1px solid var(--border-color, #ddd);
     border-radius: 12px;
     background-color: var(--bg-color, #f9f9f9);
@@ -20,7 +20,7 @@
     color: var(--text-color, #333);
     display: flex;
     flex-direction: column;
-    justify-content: flex-start; /* Align items from the top */
+    justify-content: flex-start;
     box-sizing: border-box;
 }
 
@@ -67,13 +67,14 @@
 }
 
 /* Styling for the "new note" card */
+/* New note card */
 .new-note-card {
     display: flex;
     align-items: center;
     justify-content: center;
     flex-direction: column;
     border: 2px dashed var(--border-color, #ddd);
-    padding: 8px; /* Reduced padding for smaller card */
+    padding: 8px;
     background-color: var(--new-note-bg, #f3f3f3);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     color: var(--new-note-text-color, #555);
@@ -100,6 +101,13 @@
     padding: 10px;
     width: 100%;
 }
+
+.thumbnail-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; /* Ensures the image covers the space while maintaining aspect ratio */
+}
+
 
 /* Mobile responsiveness */
 @media (max-width: 768px) {

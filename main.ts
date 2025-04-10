@@ -132,6 +132,7 @@ class EasyKeepView extends ItemView {
 		}
 	}
 
+
 	async refreshContent() {
 		await this.buildContent();
 	}
