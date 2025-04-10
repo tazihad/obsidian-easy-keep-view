@@ -133,12 +133,13 @@ class EasyKeepView extends ItemView {
 		.easy-keep-cards-container {
 			display: flex;
 			flex-wrap: wrap;
+			justify-content: center;
 			gap: 16px;
 			padding: 10px;
 		}
 		.easy-keep-card {
-			width: 250px;
-			min-height: 150px;
+			width: 280px;
+			min-height: 160px;
 			padding: 16px;
 			border: 1px solid ${borderColor};
 			border-radius: 8px;
@@ -149,6 +150,10 @@ class EasyKeepView extends ItemView {
 			display: flex;
 			flex-direction: column;
 			justify-content: space-between;
+			transition: transform 0.1s ease-in-out;
+		}
+		.easy-keep-card:hover {
+			transform: scale(1.02);
 		}
 		.easy-keep-card h3 {
 			font-size: 18px;
@@ -173,14 +178,11 @@ class EasyKeepView extends ItemView {
 			display: block;
 		}
 		.new-note-card {
-			width: 250px;
-			height: 150px;
 			display: flex;
 			align-items: center;
 			justify-content: center;
-			background-color: ${bgColor};
+			flex-direction: column;
 			border: 2px dashed ${borderColor};
-			cursor: pointer;
 		}
 		.no-history-message {
 			font-size: 20px;
@@ -189,10 +191,18 @@ class EasyKeepView extends ItemView {
 			padding: 20px;
 			width: 100%;
 		}
+
+		@media (max-width: 600px) {
+			.easy-keep-card {
+				width: 90%;
+			}
+		}
 		`;
 		document.head.appendChild(style);
 	}
 }
+
+
 
 class SampleSettingTab extends PluginSettingTab {
 	plugin: MyPlugin;
