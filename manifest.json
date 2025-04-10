@@ -6,5 +6,9 @@
 	"description": "Easy Keep View mimics the Google Keep interface, allowing you to view and manage your notes with image thumbnails and excerpts.",
 	"author": "@tazihad",
 	"authorUrl": "https://github.com/tazihad",
-	"isDesktopOnly": false
+	"isDesktopOnly": false,
+	"main": "main.js",
+	"scripts": [
+    "styles.css"
+  ]
 }
