@@ -81,15 +81,18 @@
 }
 
 .new-note-card h3 {
-    font-size: 18px;
+    font-size: 36px; /* Increased from 18px to 36px for a bigger "+" */
     margin-bottom: 6px;
     color: var(--new-note-text-color, #555);
+    line-height: 1; /* Ensures the larger icon doesn’t stretch the layout */
 }
+
 
 .new-note-card p {
     font-size: 12px;
     text-align: center;
-    font-weight: 500;
+    font-weight: 700; /* Changed from 500 to 700 for bold */
+    color: var(--new-note-text-color, #555); /* Explicitly set to ensure consistency */
 }
 
 /* No Notes Available Message */
