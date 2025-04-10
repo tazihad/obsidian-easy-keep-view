@@ -131,9 +131,8 @@ class EasyKeepView extends ItemView {
 		style.id = "easy-keep-css";
 		style.innerText = `
 		.easy-keep-cards-container {
-			display: flex;
-			flex-wrap: wrap;
-			justify-content: center;
+			display: grid;
+			grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
 			gap: 16px;
 			padding: 10px;
 		}
@@ -150,7 +149,7 @@ class EasyKeepView extends ItemView {
 			display: flex;
 			flex-direction: column;
 			justify-content: space-between;
-			transition: transform 0.1s ease-in-out;
+			transition: transform 0.1s ease-in-out, width 0.2s ease;
 		}
 		.easy-keep-card:hover {
 			transform: scale(1.02);
