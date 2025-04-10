@@ -1,4 +1,4 @@
-/* Container for all cards */
+/* General Container for Cards */
 .easy-keep-cards-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
@@ -7,10 +7,10 @@
     box-sizing: border-box;
 }
 
-/* Individual note card */
+/* Card Design */
 .easy-keep-card {
     width: 100%;
-    min-height: 160px; /* Adjusted card size */
+    min-height: 160px;
     padding: 8px;
     border: 1px solid var(--border-color, #ddd);
     border-radius: 12px;
@@ -24,17 +24,17 @@
     box-sizing: border-box;
 }
 
-/* Hover effects for the cards */
+/* Hover Effects */
 .easy-keep-card:hover {
     transform: scale(1.05);
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
-/* Title of each card: max 3 lines */
+/* Card Title Styling */
 .easy-keep-card h3 {
-    font-size: 14px; /* Reduced font size */
+    font-size: 14px;
     font-weight: 700;
-    margin-bottom: 6px; /* Smaller margin */
+    margin-bottom: 6px;
     color: var(--heading-color, #333);
     line-height: 1.2;
     display: -webkit-box;
@@ -44,30 +44,29 @@
     text-overflow: ellipsis;
 }
 
-/* Thumbnail image styling: smaller size */
+/* Thumbnail Styling */
 .easy-keep-thumbnail {
     max-width: 100%;
-    max-height: 80px; /* Reduced thumbnail size */
+    max-height: 80px;
     object-fit: cover;
     border-radius: 6px;
-    margin-top: 8px; /* Small gap between title and thumbnail */
+    margin-top: 8px;
     display: block;
 }
 
-/* Content of the card: max 5 lines, ellipsis at the end */
+/* Card Content Styling */
 .easy-keep-card p {
-    font-size: 12px; /* Smaller font size */
+    font-size: 12px;
     color: var(--text-color, #555);
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
-    -webkit-line-clamp: 5; /* Increased content line limit */
+    -webkit-line-clamp: 5;
     -webkit-box-orient: vertical;
-    margin-top: 6px; /* Small gap between title and content */
+    margin-top: 6px;
 }
 
-/* Styling for the "new note" card */
-/* New note card */
+/* New Note Card */
 .new-note-card {
     display: flex;
     align-items: center;
@@ -82,7 +81,7 @@
 }
 
 .new-note-card h3 {
-    font-size: 18px; /* Smaller font size */
+    font-size: 18px;
     margin-bottom: 6px;
     color: var(--new-note-text-color, #555);
 }
@@ -93,26 +92,26 @@
     font-weight: 500;
 }
 
-/* No notes available message */
+/* No Notes Available Message */
 .no-history-message {
-    font-size: 14px; /* Smaller font size */
+    font-size: 14px;
     color: var(--text-color, #555);
     text-align: center;
     padding: 10px;
     width: 100%;
 }
 
+/* Thumbnail Image Styling */
 .thumbnail-image {
     width: 100%;
     height: 100%;
-    object-fit: cover; /* Ensures the image covers the space while maintaining aspect ratio */
+    object-fit: cover;
 }
 
-
-/* Mobile responsiveness */
+/* Mobile Responsiveness */
 @media (max-width: 768px) {
     .easy-keep-cards-container {
-        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); /* Reduced column size */
+        grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
         gap: 12px;
     }
 
@@ -130,7 +129,7 @@
     }
 
     .easy-keep-thumbnail {
-        max-height: 60px; /* Adjust thumbnail size for smaller screens */
+        max-height: 60px;
     }
 
     .new-note-card {
@@ -140,7 +139,7 @@
 
 @media (max-width: 480px) {
     .easy-keep-cards-container {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); /* Reduced column size for smaller screens */
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
         gap: 8px;
         padding: 6px;
     }
@@ -159,7 +158,7 @@
     }
 
     .easy-keep-thumbnail {
-        max-height: 50px; /* Adjust thumbnail size for very small screens */
+        max-height: 50px;
     }
 
     .new-note-card {
@@ -167,7 +166,7 @@
     }
 }
 
-/* Dark theme mode */
+/* Dark Mode Theme Styling */
 @media (prefers-color-scheme: dark) {
     .easy-keep-card {
         background-color: var(--bg-dark, #2c2c2c);

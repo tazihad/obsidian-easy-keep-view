@@ -17,7 +17,6 @@ interface NoteEntry {
 	title: string;
 	excerpt: string;
 	time: number;
-	// Store the raw image embed (e.g. "Antora-Pramanik.jpg" or "testfolder/Antora-Pramanik.jpg")
 	imageLink?: string;
 }
 
@@ -33,7 +32,7 @@ const DEFAULT_SETTINGS: MyPluginSettings = {
 	themeMode: "system",
 };
 
-// Fallback helper: search vault for an image file by matching the basename (ignoring extension)
+// Helper function to resolve image by name
 function resolveImageByName(app: App, imageName: string): TFile | null {
 	const target = imageName.replace(/\.(jpg|jpeg|png|webp)$/i, "").toLowerCase();
 	const candidates = app.vault.getFiles().filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f.name));
@@ -45,7 +44,7 @@ function resolveImageByName(app: App, imageName: string): TFile | null {
 	return null;
 }
 
-// Simple debounce helper
+// Debounce function for throttling updates
 function debounce(fn: (...args: any[]) => void, delay = 300): (...args: any[]) => void {
 	let timer: NodeJS.Timeout;
 	return (...args: any[]) => {
@@ -71,6 +70,7 @@ class EasyKeepView extends ItemView {
 		return "Easy Keep View";
 	}
 
+	// Build the content of the view
 	async buildContent() {
 		this.mainContainer.empty();
 		this.mainContainer.style.overflowY = "auto";
@@ -96,11 +96,10 @@ class EasyKeepView extends ItemView {
 				const card = cardContainer.createDiv("easy-keep-card");
 				card.createEl("h3", { text: note.title });
 
+				// Show thumbnail if imageLink is available, otherwise show excerpt
 				if (note.imageLink) {
-					// Try resolving the image using the metadata cache relative to the note.
 					let file = this.app.metadataCache.getFirstLinkpathDest(note.imageLink, note.path);
 					if (!(file instanceof TFile)) {
-						// Fallback: search by name.
 						file = resolveImageByName(this.app, note.imageLink);
 					}
 					if (file instanceof TFile) {
@@ -119,6 +118,7 @@ class EasyKeepView extends ItemView {
 						card.createEl("p", { text: note.excerpt });
 					}
 				} else {
+					// If no image link, show the excerpt instead
 					if (note.excerpt) {
 						card.createEl("p", { text: note.excerpt });
 					}
@@ -133,10 +133,12 @@ class EasyKeepView extends ItemView {
 	}
 
 
+
 	async refreshContent() {
 		await this.buildContent();
 	}
 
+	// Initialize view on open
 	async onOpen() {
 		this.mainContainer = this.containerEl;
 
@@ -149,7 +151,7 @@ class EasyKeepView extends ItemView {
 		this.loadCSS();
 	}
 
-
+	// Load custom CSS
 	loadCSS() {
 		const link = document.createElement("link");
 		link.rel = "stylesheet";
@@ -160,6 +162,7 @@ class EasyKeepView extends ItemView {
 	async onClose() {}
 }
 
+// Plugin settings tab
 class SampleSettingTab extends PluginSettingTab {
 	plugin: MyPlugin;
 	constructor(app: App, plugin: MyPlugin) {
@@ -270,6 +273,7 @@ export default class MyPlugin extends Plugin {
 		this.app.workspace.detachLeavesOfType(VIEW_TYPE_EASY_KEEP);
 	}
 
+	// Activate the view
 	async activateEasyKeepView() {
 		const existingLeaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_EASY_KEEP);
 		if (existingLeaves.length > 0) {
@@ -282,6 +286,7 @@ export default class MyPlugin extends Plugin {
 		this.app.workspace.revealLeaf(leaf);
 	}
 
+	// Refresh the view if open
 	async refreshEasyKeepViewIfOpen() {
 		const existingLeaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_EASY_KEEP);
 		if (existingLeaves.length > 0) {
@@ -290,32 +295,59 @@ export default class MyPlugin extends Plugin {
 		}
 	}
 
-	/**
-	 * Checks each note’s first nonempty line for an image embed pattern.
-	 * If found, update the note's imageLink in the database.
-	 */
+	// Refresh note thumbnails based on content
+	// Refresh note thumbnails based on content
 	async refreshThumbnails() {
 		for (const note of this.settings.notesDB) {
 			const file = this.app.vault.getAbstractFileByPath(note.path);
 			if (!(file instanceof TFile)) continue;
+
 			const content = await this.app.vault.cachedRead(file);
-			const firstNonEmptyLine = content.split("\n").find(line => line.trim() !== "");
-			if (firstNonEmptyLine) {
-				const match = firstNonEmptyLine.match(/!\[\[([^\]]+)\]\]/);
+			const lines = content.trim().split("\n").filter(line => line.trim() !== "");
+
+			// Get the first non-empty line (content or image)
+			const firstLine = lines.find(line => line.trim() !== "");
+
+			let excerpt = "";
+			let imageLink: string | undefined;
+
+			// If the first line contains an embedded image, don't show the thumbnail, just text
+			if (firstLine && firstLine.includes("![[") && firstLine.includes("]]")) {
+				// Excerpt should just be the content text before the image link
+				excerpt = lines.slice(0, 1).join(" ");
+			} else {
+				// Create excerpt from first lines (up to 2 lines of content)
+				if (firstLine) {
+					excerpt = firstLine;
+					if (lines.length > 1) excerpt += " \u2026"; // Add ellipsis if there are more lines
+				}
+
+				// Check if an image is embedded anywhere else in the content (not just the first line)
+				const match = content.match(/!\[\[([^\]]+)\]\]/);
 				if (match) {
-					const newLink = match[1].trim();
-					if (note.imageLink !== newLink) {
-						note.imageLink = newLink;
+					imageLink = match[1].trim();
+					if (imageLink && note.imageLink !== imageLink) {
+						note.imageLink = imageLink;
 					}
 				}
 			}
+
+			// Update the note with excerpt and imageLink if found
+			if (imageLink) {
+				note.imageLink = imageLink;
+			}
+
+			if (excerpt) {
+				note.excerpt = excerpt;
+			}
 		}
+
 		await this.saveSettings();
 	}
 
-	/**
-	 * Save note info (including raw image embed) to the database.
-	 */
+
+
+	// Add note to the database
 	async addToDatabase(file: TFile) {
 		const content = await this.app.vault.cachedRead(file);
 		const lines = content.trim().split("\n").filter(line => line.trim() !== "");
@@ -351,6 +383,7 @@ export default class MyPlugin extends Plugin {
 		await this.saveSettings();
 	}
 
+	// Remove note from the database
 	async removeFromDatabase(filePath: string) {
 		const initialLength = this.settings.notesDB.length;
 		this.settings.notesDB = this.settings.notesDB.filter(entry => entry.path !== filePath);
@@ -359,6 +392,7 @@ export default class MyPlugin extends Plugin {
 		}
 	}
 
+	// Clean up the database by removing notes that no longer exist
 	async cleanDatabase() {
 		const files = this.app.vault.getMarkdownFiles();
 		const existingPaths = new Set(files.map(file => file.path));
@@ -366,6 +400,7 @@ export default class MyPlugin extends Plugin {
 		await this.saveSettings();
 	}
 
+	// Open a note in a new tab
 	async openNoteInNewTab(filePath: string) {
 		const file = this.app.vault.getAbstractFileByPath(filePath);
 		if (!(file instanceof TFile)) return;
@@ -384,14 +419,17 @@ export default class MyPlugin extends Plugin {
 		}
 	}
 
+	// Load settings from storage
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
+	// Save settings to storage
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
 
+	// Generate a unique name for an untitled note
 	generateUniqueUntitledName(): string {
 		const baseName = "Untitled";
 		const files = this.app.vault.getMarkdownFiles();
@@ -408,18 +446,12 @@ export default class MyPlugin extends Plugin {
 		return `${baseName} ${counter}`;
 	}
 
-
+	// Create a new note
 	async createNewNote() {
 		const title = this.generateUniqueUntitledName();
 		const filePath = `${title}.md`;
-		// Create an empty file instead of including the title in the content
 		const file = await this.app.vault.create(filePath, "");
 		await this.addToDatabase(file);
-		this.refreshEasyKeepViewIfOpen();
-		const newLeaf = this.app.workspace.getLeaf(true);
-		await newLeaf.openFile(file);
-		this.app.workspace.setActiveLeaf(newLeaf, { focus: true });
+		this.openNoteInNewTab(filePath);
 	}
-
-
 }
