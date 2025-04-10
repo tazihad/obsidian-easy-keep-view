@@ -89,7 +89,7 @@ class EasyKeepView extends ItemView {
 
 		let notes = this.plugin.settings.notesDB.slice()
 		.sort((a, b) => b.time - a.time)
-		.slice(0, 20);
+		.slice(0, 100);
 
 		if (notes.length) {
 			notes.forEach(note => {
