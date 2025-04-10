@@ -391,14 +391,34 @@ export default class MyPlugin extends Plugin {
 		await this.saveData(this.settings);
 	}
 
+	generateUniqueUntitledName(): string {
+		const baseName = "Untitled";
+		const files = this.app.vault.getMarkdownFiles();
+		const existingNames = new Set(files.map(f => f.basename));
+
+		if (!existingNames.has(baseName)) {
+			return baseName;
+		}
+
+		let counter = 1;
+		while (existingNames.has(`${baseName} ${counter}`)) {
+			counter++;
+		}
+		return `${baseName} ${counter}`;
+	}
+
+
 	async createNewNote() {
-		const fileName = `New Note ${Date.now()}.md`;
-		const filePath = `/${fileName}`;
-		const file = await this.app.vault.create(filePath, `# ${fileName}\n`);
+		const title = this.generateUniqueUntitledName();
+		const filePath = `${title}.md`;
+		// Create an empty file instead of including the title in the content
+		const file = await this.app.vault.create(filePath, "");
 		await this.addToDatabase(file);
 		this.refreshEasyKeepViewIfOpen();
 		const newLeaf = this.app.workspace.getLeaf(true);
 		await newLeaf.openFile(file);
 		this.app.workspace.setActiveLeaf(newLeaf, { focus: true });
 	}
+
+
 }
