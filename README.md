@@ -14,7 +14,7 @@
 ## Installation
 
 1. Download the latest release from the GitHub repository.
-2. Install the plugin in Obsidian by going to **Settings > Community Plugins > Install Plugin** and selecting **Easy Keep View**.
+2. Install the plugin by going to **Settings > Community Plugins > Install Plugin** and selecting **Easy Keep View**.
 3. Enable the plugin and start organizing your notes!
 
 ## Usage
