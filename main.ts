@@ -138,9 +138,16 @@ class EasyKeepView extends ItemView {
 
 	async onOpen() {
 		this.mainContainer = this.containerEl;
+
+		// Wait until plugin settings are loaded
+		await this.plugin.loadSettings();
+
+		// Build content after settings are ready
 		await this.buildContent();
+
 		this.loadCSS();
 	}
+
 
 	loadCSS() {
 		const link = document.createElement("link");
@@ -185,7 +192,11 @@ export default class MyPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
-		await this.cleanDatabase();
+		// Defer cleanDatabase until vault is ready
+		this.app.workspace.onLayoutReady(async () => {
+			await this.cleanDatabase();
+			this.refreshEasyKeepViewIfOpen();
+		});
 
 		this.registerView(VIEW_TYPE_EASY_KEEP, (leaf) => new EasyKeepView(leaf, this));
 
