@@ -57,6 +57,8 @@ function debounce(fn: (...args: any[]) => void, delay = 300): (...args: any[]) =
 	};
 }
 
+
+
 class EasyKeepView extends ItemView {
 	plugin: MyPlugin;
 	private mainContainer: HTMLElement;
@@ -79,28 +81,30 @@ class EasyKeepView extends ItemView {
 		this.mainContainer.empty();
 		this.mainContainer.style.overflowY = "auto";
 		this.mainContainer.style.height = "100%";
-
+	
 		const cardContainer = this.mainContainer.createDiv("easy-keep-cards-container");
-
+	
+		// Apply the theme to the card container immediately
+		this.plugin.applyTheme();
+	
 		// New Note Card
 		const newNoteCard = cardContainer.createDiv("easy-keep-card new-note-card");
 		newNoteCard.createEl("h3", { text: "+" });
 		newNoteCard.createEl("p", { text: "Add New Note" });
 		newNoteCard.onclick = () => this.plugin.createNewNote();
-
+	
 		// Before building cards, refresh thumbnails from note content.
 		await this.plugin.refreshThumbnails();
-
+	
 		let notes = this.plugin.settings.notesDB.slice()
-		.sort((a, b) => b.time - a.time)
-		.slice(0, 100);
-
+			.sort((a, b) => b.time - a.time)
+			.slice(0, 100);
+	
 		if (notes.length) {
 			notes.forEach(note => {
 				const card = cardContainer.createDiv("easy-keep-card");
 				card.createEl("h3", { text: note.title });
-
-				// Show thumbnail if imageLink is available, otherwise show excerpt
+	
 				if (note.imageLink) {
 					let file = this.app.metadataCache.getFirstLinkpathDest(note.imageLink, note.path);
 					if (!(file instanceof TFile)) {
@@ -121,13 +125,10 @@ class EasyKeepView extends ItemView {
 					} else if (note.excerpt) {
 						card.createEl("p", { text: note.excerpt });
 					}
-				} else {
-					// If no image link, show the excerpt instead
-					if (note.excerpt) {
-						card.createEl("p", { text: note.excerpt });
-					}
+				} else if (note.excerpt) {
+					card.createEl("p", { text: note.excerpt });
 				}
-
+	
 				card.onclick = () => this.plugin.openNoteInNewTab(note.path);
 			});
 		} else {
@@ -145,13 +146,13 @@ class EasyKeepView extends ItemView {
 	// Initialize view on open
 	async onOpen() {
 		this.mainContainer = this.containerEl;
-
+	
 		// Wait until plugin settings are loaded
 		await this.plugin.loadSettings();
-
-		// Build content after settings are ready
+	
+		// Build content and apply theme
 		await this.buildContent();
-
+	
 		this.loadCSS();
 	}
 
@@ -180,6 +181,7 @@ class SampleSettingTab extends PluginSettingTab {
 		containerEl.createEl("h2", { text: "Easy Keep View Plugin Settings" });
 
 		// Theme mode selector
+		// Theme mode selector
 		new Setting(containerEl)
 		.setName("Theme Mode")
 		.setDesc("Select a theme mode for the Easy Keep View")
@@ -191,6 +193,8 @@ class SampleSettingTab extends PluginSettingTab {
 			dropdown.onChange(async (value: "system" | "light" | "dark") => {
 				this.plugin.settings.themeMode = value;
 				await this.plugin.saveSettings();
+				// Apply the selected theme
+				this.plugin.applyTheme();
 				this.plugin.refreshEasyKeepViewIfOpen();
 			});
 		});
@@ -217,6 +221,11 @@ export default class MyPlugin extends Plugin {
 
 	async onload() {
 		await this.loadSettings();
+
+		// Apply theme on plugin load
+		this.applyTheme();
+
+
 		// Defer cleanDatabase until vault is ready
 		this.app.workspace.onLayoutReady(async () => {
 			await this.cleanDatabase();
@@ -293,6 +302,39 @@ export default class MyPlugin extends Plugin {
 		this.refreshDebounced = debounce(() => this.refreshEasyKeepViewIfOpen(), 300);
 
 		this.addSettingTab(new SampleSettingTab(this.app, this));
+	}
+
+	// Apply theme based on settings
+	applyTheme() {
+		const theme = this.settings.themeMode;
+		const existingLeaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_EASY_KEEP);
+	
+		if (existingLeaves.length > 0) {
+			const view = existingLeaves[0].view as EasyKeepView;
+			const container = view.containerEl;
+			const cardContainer = container.querySelector(".easy-keep-cards-container");
+	
+			if (cardContainer) {
+				// Remove all possible theme classes
+				cardContainer.removeClass("theme-light", "theme-dark", "theme-system");
+	
+				// Apply the selected theme
+				if (theme === "system") {
+					// Detect Obsidian's current theme
+					const isDark = document.body.hasClass("theme-dark");
+					cardContainer.addClass(isDark ? "theme-dark" : "theme-light");
+				} else {
+					cardContainer.addClass(`theme-${theme}`);
+				}
+			}
+		}
+	
+		// Optionally set data-theme on <html> for broader compatibility (not required for this fix)
+		if (theme === "system") {
+			document.documentElement.removeAttribute("data-theme");
+		} else {
+			document.documentElement.setAttribute("data-theme", theme);
+		}
 	}
 
 	onunload() {

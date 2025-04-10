@@ -108,6 +108,70 @@
     object-fit: cover;
 }
 
+/* Light Theme */
+.easy-keep-cards-container.theme-light {
+    background-color: white !important;
+    color: #333 !important;
+}
+
+.easy-keep-cards-container.theme-light .easy-keep-card {
+    background-color: #f9f9f9 !important;
+    border-color: #ddd !important;
+}
+
+.easy-keep-cards-container.theme-light .easy-keep-card h3 {
+    color: #333 !important;
+}
+
+.easy-keep-cards-container.theme-light .easy-keep-card p {
+    color: #555 !important;
+}
+
+.easy-keep-cards-container.theme-light .new-note-card {
+    background-color: #f3f3f3 !important;
+    border-color: #ddd !important;
+}
+
+.easy-keep-cards-container.theme-light .no-history-message {
+    color: #555 !important;
+}
+
+/* Dark Theme */
+.easy-keep-cards-container.theme-dark {
+    background-color: #2c2c2c !important;
+    color: #f9f9f9 !important;
+}
+
+.easy-keep-cards-container.theme-dark .easy-keep-card {
+    background-color: #333 !important;
+    border-color: #444 !important;
+}
+
+.easy-keep-cards-container.theme-dark .easy-keep-card h3 {
+    color: #fff !important;
+}
+
+.easy-keep-cards-container.theme-dark .easy-keep-card p {
+    color: #ccc !important;
+}
+
+.easy-keep-cards-container.theme-dark .new-note-card {
+    background-color: #444 !important;
+    border-color: #555 !important;
+}
+
+.easy-keep-cards-container.theme-dark .no-history-message {
+    color: #ccc !important;
+}
+
+/* System Theme - Follows system's preference */
+/* System Theme (optional fallback) */
+[data-theme="system"] .easy-keep-cards-container,
+.theme-system .easy-keep-cards-container {
+    background-color: var(--bg-system, #f9f9f9);
+    color: var(--text-system, #333);
+}
+
 /* Mobile Responsiveness */
 @media (max-width: 768px) {
     .easy-keep-cards-container {
