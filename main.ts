@@ -3,6 +3,7 @@ import {
 	Plugin,
 	WorkspaceLeaf,
 	ItemView,
+	Notice,
 	TFile,
 	PluginSettingTab,
 	Setting,
@@ -20,14 +21,14 @@ interface NoteEntry {
 	imageLink?: string;
 }
 
-interface MyPluginSettings {
+interface EasyKeepViewPluginSettings {
 	mySetting: string;
 	notesDB: NoteEntry[];
 	themeMode: "system" | "light" | "dark";
 	openAsHomepage: boolean;
 }
 
-const DEFAULT_SETTINGS: MyPluginSettings = {
+const DEFAULT_SETTINGS: EasyKeepViewPluginSettings = {
 	mySetting: "default",
 	notesDB: [],
 	themeMode: "system",
@@ -60,10 +61,10 @@ function debounce(fn: (...args: any[]) => void, delay = 300): (...args: any[]) =
 
 
 class EasyKeepView extends ItemView {
-	plugin: MyPlugin;
+	plugin: EasyKeepViewPlugin;
 	private mainContainer: HTMLElement;
 
-	constructor(leaf: WorkspaceLeaf, plugin: MyPlugin) {
+	constructor(leaf: WorkspaceLeaf, plugin: EasyKeepViewPlugin) {
 		super(leaf);
 		this.plugin = plugin;
 	}
@@ -168,9 +169,9 @@ class EasyKeepView extends ItemView {
 }
 
 // Plugin settings tab
-class SampleSettingTab extends PluginSettingTab {
-	plugin: MyPlugin;
-	constructor(app: App, plugin: MyPlugin) {
+class EasySettingTab extends PluginSettingTab {
+	plugin: EasyKeepViewPlugin;
+	constructor(app: App, plugin: EasyKeepViewPlugin) {
 		super(app, plugin);
 		this.plugin = plugin;
 	}
@@ -215,8 +216,8 @@ class SampleSettingTab extends PluginSettingTab {
 }
 
 
-export default class MyPlugin extends Plugin {
-	settings: MyPluginSettings;
+export default class EasyKeepViewPlugin extends Plugin {
+	settings: EasyKeepViewPluginSettings;
 	private refreshDebounced: () => void;
 
 	async onload() {
@@ -301,7 +302,7 @@ export default class MyPlugin extends Plugin {
 		// Initialize debounce for refresh calls.
 		this.refreshDebounced = debounce(() => this.refreshEasyKeepViewIfOpen(), 300);
 
-		this.addSettingTab(new SampleSettingTab(this.app, this));
+		this.addSettingTab(new EasySettingTab(this.app, this));
 	}
 
 	// Apply theme based on settings
