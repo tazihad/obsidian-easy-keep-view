@@ -82,7 +82,9 @@ class EasyKeepView extends ItemView {
             card.createEl("p", { text: note.excerpt });
         }
 
-        card.onclick = () => this.plugin.openNoteInNewTab(note.path);
+        // Use addEventListener instead of onclick to fix TypeScript error
+        card.addEventListener('click', () => this.plugin.openNoteInNewTab(note.path));
+
         return card;
     }
 
@@ -92,9 +94,13 @@ class EasyKeepView extends ItemView {
         if (!this.cardContainer) {
             this.cardContainer = this.mainContainer.createDiv("easy-keep-cards-container");
             this.plugin.applyTheme();
+        } else {
+            // Clear existing cards except new-note-card to prevent duplicates
+            const existingCards = this.cardContainer.querySelectorAll(".easy-keep-card:not(.new-note-card)");
+            existingCards.forEach(card => card.remove());
         }
 
-        // New Note Card (always present)
+        // New Note Card (always first)
         let newNoteCard = this.cardContainer.querySelector(".new-note-card");
         if (!newNoteCard) {
             newNoteCard = this.cardContainer.createDiv("easy-keep-card new-note-card");
@@ -102,6 +108,8 @@ class EasyKeepView extends ItemView {
             newNoteCard.createEl("p", { text: "Add New Note" });
             newNoteCard.addEventListener('click', () => this.plugin.createNewNote());
         }
+        // Ensure newNoteCard is the first child
+        this.cardContainer.insertBefore(newNoteCard, this.cardContainer.firstChild);
 
         // Refresh thumbnails in the background
         await this.plugin.refreshThumbnails();
@@ -116,7 +124,8 @@ class EasyKeepView extends ItemView {
         notes.forEach(note => {
             currentPaths.add(note.path);
             const card = this.createOrUpdateCard(note);
-            this.cardContainer!.appendChild(card); // Ensure order
+            // Append after newNoteCard
+            this.cardContainer!.appendChild(card);
         });
 
         // Remove cards for notes that no longer exist
@@ -133,6 +142,12 @@ class EasyKeepView extends ItemView {
             if (!noHistory) {
                 noHistory = this.cardContainer.createDiv("no-history-message");
                 noHistory.setText("No notes, create a new one!");
+                // Insert after newNoteCard
+                if (newNoteCard && newNoteCard.nextSibling) {
+                    this.cardContainer.insertBefore(noHistory, newNoteCard.nextSibling);
+                } else {
+                    this.cardContainer.appendChild(noHistory);
+                }
             }
         } else if (noHistory) {
             noHistory.remove();
@@ -152,8 +167,6 @@ class EasyKeepView extends ItemView {
         this.mainContainer = this.containerEl;
         await this.plugin.loadSettings();
         await this.buildContent();
-
-        // No need for active-leaf-change listener here; plugin handles updates
     }
 
     async onClose() {
@@ -284,17 +297,45 @@ export default class EasyKeepViewPlugin extends Plugin {
 	}
 
 	// Activate the view
-	async activateEasyKeepView() {
-		const existingLeaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_EASY_KEEP);
-		if (existingLeaves.length > 0) {
-			this.app.workspace.revealLeaf(existingLeaves[0]);
-			return;
-		}
+	// Activate the view
+    async activateEasyKeepView() {
+        const existingLeaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_EASY_KEEP);
+        if (existingLeaves.length > 0) {
+            const leaf = existingLeaves[0];
+            this.app.workspace.revealLeaf(leaf);
+    
+            // Ensure the view is refreshed before scrolling
+            const view = leaf.view as EasyKeepView;
+            await view.refreshContent();
+    
+            // Scroll after DOM is refreshed
+            requestAnimationFrame(() => {
+                const cardContainer = view.containerEl.querySelector(".easy-keep-cards-container");
+                if (cardContainer) {
+                    cardContainer.scrollTop = 0;
+                }
+            });
+    
+            return;
+        }
+    
+        const leaf = this.app.workspace.getLeaf(true);
+        await leaf.setViewState({ type: VIEW_TYPE_EASY_KEEP, active: true });
+        this.app.workspace.revealLeaf(leaf);
+    
+        const view = leaf.view as EasyKeepView;
+        await view.refreshContent();
+    
+        requestAnimationFrame(() => {
+            const cardContainer = view.containerEl.querySelector(".easy-keep-cards-container");
+            if (cardContainer) {
+                cardContainer.scrollTop = 0;
+            }
+        });
+    }
+    
 
-		const leaf = this.app.workspace.getLeaf(true);
-		await leaf.setViewState({ type: VIEW_TYPE_EASY_KEEP, active: true });
-		this.app.workspace.revealLeaf(leaf);
-	}
+
 
 	// Refresh the view if open
 	async refreshEasyKeepViewIfOpen() {
