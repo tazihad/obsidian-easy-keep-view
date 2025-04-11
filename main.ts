@@ -79,9 +79,7 @@ class EasyKeepView extends ItemView {
 
 	// Build the content of the view
 	async buildContent() {
-		this.mainContainer.empty();
-		this.mainContainer.style.overflowY = "auto";
-		this.mainContainer.style.height = "100%";
+		this.mainContainer.addClass("easy-keep-view-main");
 	
 		const cardContainer = this.mainContainer.createDiv("easy-keep-cards-container");
 	
@@ -153,18 +151,7 @@ class EasyKeepView extends ItemView {
 	
 		// Build content and apply theme
 		await this.buildContent();
-	
-		this.loadCSS();
 	}
-
-	// Load custom CSS
-	loadCSS() {
-		const link = document.createElement("link");
-		link.rel = "stylesheet";
-		link.href = `${this.plugin.manifest.dir}/assets/styles.css`;
-		document.head.appendChild(link);
-	}
-
 	async onClose() {}
 }
 
