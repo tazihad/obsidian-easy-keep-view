@@ -80,30 +80,30 @@ class EasyKeepView extends ItemView {
 	// Build the content of the view
 	async buildContent() {
 		this.mainContainer.addClass("easy-keep-view-main");
-	
+
 		const cardContainer = this.mainContainer.createDiv("easy-keep-cards-container");
-	
+
 		// Apply the theme to the card container immediately
 		this.plugin.applyTheme();
-	
+
 		// New Note Card
 		const newNoteCard = cardContainer.createDiv("easy-keep-card new-note-card");
 		newNoteCard.createEl("h3", { text: "+" });
 		newNoteCard.createEl("p", { text: "Add New Note" });
 		newNoteCard.onclick = () => this.plugin.createNewNote();
-	
-		// Before building cards, refresh thumbnails from note content.
+
+		// Refresh thumbnails from note content.
 		await this.plugin.refreshThumbnails();
-	
+
 		let notes = this.plugin.settings.notesDB.slice()
 			.sort((a, b) => b.time - a.time)
 			.slice(0, 100);
-	
+
 		if (notes.length) {
 			notes.forEach(note => {
 				const card = cardContainer.createDiv("easy-keep-card");
 				card.createEl("h3", { text: note.title });
-	
+
 				if (note.imageLink) {
 					let file = this.app.metadataCache.getFirstLinkpathDest(note.imageLink, note.path);
 					if (!(file instanceof TFile)) {
@@ -127,7 +127,7 @@ class EasyKeepView extends ItemView {
 				} else if (note.excerpt) {
 					card.createEl("p", { text: note.excerpt });
 				}
-	
+
 				card.onclick = () => this.plugin.openNoteInNewTab(note.path);
 			});
 		} else {
@@ -136,24 +136,58 @@ class EasyKeepView extends ItemView {
 		}
 	}
 
-
-
+	// Force a refresh of the content
 	async refreshContent() {
+		// Clear the previous content and rebuild it
+		this.mainContainer.empty();
 		await this.buildContent();
 	}
 
 	// Initialize view on open
 	async onOpen() {
 		this.mainContainer = this.containerEl;
-	
+
 		// Wait until plugin settings are loaded
 		await this.plugin.loadSettings();
-	
+
 		// Build content and apply theme
 		await this.buildContent();
+
+		// Listen for changes in the active leaf and content changes
+		this.app.workspace.on("active-leaf-change", async () => {
+			const activeLeaf = this.app.workspace.activeLeaf;
+			if (activeLeaf && activeLeaf.view.getViewType() === VIEW_TYPE_EASY_KEEP) {
+				// Refresh content dynamically when Easy Keep View becomes active
+				await this.refreshContent();
+			}
+		});
+
+		// Listen for changes in the notes database (e.g., adding or removing notes)
+		this.plugin.registerEvent(this.plugin.app.vault.on("create", async () => {
+			if (this.app.workspace.activeLeaf?.view.getViewType() === VIEW_TYPE_EASY_KEEP) {
+				await this.refreshContent();  // Refresh when a new note is created
+			}
+		}));
+
+		this.plugin.registerEvent(this.plugin.app.vault.on("delete", async () => {
+			if (this.app.workspace.activeLeaf?.view.getViewType() === VIEW_TYPE_EASY_KEEP) {
+				await this.refreshContent();  // Refresh when a note is deleted
+			}
+		}));
+
+		this.plugin.registerEvent(this.plugin.app.vault.on("modify", async () => {
+			if (this.app.workspace.activeLeaf?.view.getViewType() === VIEW_TYPE_EASY_KEEP) {
+				await this.refreshContent();  // Refresh when a note is modified
+			}
+		}));
 	}
-	async onClose() {}
+
+	async onClose() {
+		// Clean up if needed when the view is closed
+	}
 }
+
+
 
 // Plugin settings tab
 class EasySettingTab extends PluginSettingTab {
@@ -323,10 +357,6 @@ export default class EasyKeepViewPlugin extends Plugin {
 		} else {
 			document.documentElement.setAttribute("data-theme", theme);
 		}
-	}
-
-	onunload() {
-		this.app.workspace.detachLeavesOfType(VIEW_TYPE_EASY_KEEP);
 	}
 
 	// Activate the view
