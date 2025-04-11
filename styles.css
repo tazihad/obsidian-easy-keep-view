@@ -3,10 +3,10 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
     gap: 16px;
-    padding: 12px;
+    padding: 0 12px 12px 12px; /* No top padding */
+    margin-top: 0; /* Ensure no top margin */
     box-sizing: border-box;
 }
-
 /* Card Design */
 .easy-keep-card {
     width: 100%;
@@ -25,8 +25,10 @@
 }
 
 .easy-keep-view-main {
-	overflow-y: auto;
-	height: 100%;
+    overflow-y: auto;
+    height: 100%;
+    padding-top: 0; /* Explicitly remove top padding */
+    margin-top: 0; /* Explicitly remove top margin */
 }
 
 
