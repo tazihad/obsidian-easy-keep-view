@@ -136,5 +136,7 @@ dist
 .pnp.*
 
 ##############
-data.json
 
+data.json
+main.js
+main.css
