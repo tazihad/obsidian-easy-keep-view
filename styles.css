@@ -1,12 +1,21 @@
-/* General Container for Cards */
+/* Update these styles in your style.css */
+.easy-keep-view-main {
+    overflow-y: auto;
+    height: 100%;
+    padding: 0 !important;  /* Remove all padding */
+    margin: 0 !important;   /* Remove all margins */
+}
+
 .easy-keep-cards-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
     gap: 16px;
-    padding: 0 12px 12px 12px; /* No top padding */
-    margin-top: 0; /* Ensure no top margin */
+    padding: 12px;  /* Uniform padding on all sides */
+    align-content: start;  /* Align grid to top */
+    min-height: 100%;  /* Ensure container takes full height */
     box-sizing: border-box;
 }
+
 /* Card Design */
 .easy-keep-card {
     width: 100%;
@@ -24,12 +33,6 @@
     box-sizing: border-box;
 }
 
-.easy-keep-view-main {
-    overflow-y: auto;
-    height: 100%;
-    padding-top: 0; /* Explicitly remove top padding */
-    margin-top: 0; /* Explicitly remove top margin */
-}
 
 
 /* Hover Effects */
