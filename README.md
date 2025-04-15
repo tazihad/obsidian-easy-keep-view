@@ -2,7 +2,7 @@
 
 **Easy Keep View** is a plugin that mimics the Google Keep interface, allowing you to view and manage your notes with image thumbnails and excerpts.
 
-![Screenshot](assets/Screenshot_20250410_035221.png)
+![Screenshot](assets/Screenshot_20250415_144311.png)
 
 ## Features
 
