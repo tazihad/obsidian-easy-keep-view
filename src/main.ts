@@ -1,6 +1,5 @@
 import { App, Plugin, WorkspaceLeaf, ItemView, TFile } from "obsidian";
 import { DEFAULT_SETTINGS, EasySettingTab, NoteEntry, EasyKeepViewPluginSettings } from "./settings";  // Import from settings
-import "../styles.css";
 
 const VIEW_TYPE_EASY_KEEP = "easy-keep-view";
 
