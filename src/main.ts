@@ -186,6 +186,19 @@ export default class EasyKeepViewPlugin extends Plugin {
             this.activateEasyKeepView();
         });
 
+        // Register commands here
+        this.addCommand({
+            id: "open-easy-keep-view",
+            name: "Open Easy Keep View",
+            callback: () => this.activateEasyKeepView(),
+        });
+
+        this.addCommand({
+            id: "create-easy-keep-note",
+            name: "Create New Easy Keep Note",
+            callback: () => this.createNewNote(),
+        });
+
         // Update database on file-open
         this.registerEvent(this.app.workspace.on("file-open", async (file) => {
             if (file) {

@@ -23,6 +23,7 @@ export const DEFAULT_SETTINGS: EasyKeepViewPluginSettings = {
     openAsHomepage: false,
 };
 
+
 export class EasySettingTab extends PluginSettingTab {
     plugin: EasyKeepViewPlugin;
 
