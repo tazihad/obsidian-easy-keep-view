@@ -175,7 +175,7 @@ export default class EasyKeepViewPlugin extends Plugin {
 
         this.addCommand({
             id: "create-easy-keep-note",
-            name: "Create New Easy Keep Note",
+            name: "Create new easy keep note",
             callback: () => this.createNewNote(),
         });
 
