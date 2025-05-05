@@ -37,8 +37,6 @@ export class EasySettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        containerEl.createEl("h2", { text: "Easy Keep View Plugin Settings" });
-
         // Theme mode selector
         new Setting(containerEl)
             .setName("Theme Mode")
