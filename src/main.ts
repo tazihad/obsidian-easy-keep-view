@@ -187,7 +187,6 @@ export default class EasyKeepViewPlugin extends Plugin {
         const ribbonIconEl = this.addRibbonIcon("sticky-note", "Easy Keep View", () => {
             this.activateEasyKeepView();
         });
-        ribbonIconEl.addClass("my-plugin-ribbon-class");
 
         // Update database on file-open
         this.registerEvent(this.app.workspace.on("file-open", async (file) => {
