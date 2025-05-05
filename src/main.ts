@@ -61,9 +61,7 @@ class EasyKeepView extends ItemView {
                     img.remove();
                     if (note.excerpt) card.createEl("p", { text: note.excerpt });
                 };
-                img.onload = () => {
-                    console.log("[Easy Keep View] Thumbnail loaded:", resourcePath);
-                };
+                
             } else if (note.excerpt) {
                 card.createEl("p", { text: note.excerpt });
             }
