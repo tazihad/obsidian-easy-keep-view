@@ -80,7 +80,6 @@ class EasyKeepView extends ItemView {
         this.mainContainer.addClass("easy-keep-view-main");
         if (!this.cardContainer) {
             this.cardContainer = this.mainContainer.createDiv("easy-keep-cards-container");
-            this.plugin.applyTheme();
         } else {
             // Clear existing cards except new-note-card to prevent duplicates
             const existingCards = this.cardContainer.querySelectorAll(".easy-keep-card:not(.new-note-card)");
@@ -170,7 +169,6 @@ export default class EasyKeepViewPlugin extends Plugin {
 
 	async onload() {
         await this.loadSettings();
-        this.applyTheme();
 
         this.registerView(VIEW_TYPE_EASY_KEEP, (leaf) => new EasyKeepView(leaf, this));
 
@@ -248,39 +246,6 @@ export default class EasyKeepViewPlugin extends Plugin {
 
         this.addSettingTab(new EasySettingTab(this.app, this));
     }
-
-	// Apply theme based on settings
-	applyTheme() {
-		const theme = this.settings.themeMode;
-		const existingLeaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_EASY_KEEP);
-	
-		if (existingLeaves.length > 0) {
-			const view = existingLeaves[0].view as EasyKeepView;
-			const container = view.containerEl;
-			const cardContainer = container.querySelector(".easy-keep-cards-container");
-	
-			if (cardContainer) {
-				// Remove all possible theme classes
-				cardContainer.removeClass("theme-light", "theme-dark", "theme-system");
-	
-				// Apply the selected theme
-				if (theme === "system") {
-					// Detect Obsidian's current theme
-					const isDark = document.body.hasClass("theme-dark");
-					cardContainer.addClass(isDark ? "theme-dark" : "theme-light");
-				} else {
-					cardContainer.addClass(`theme-${theme}`);
-				}
-			}
-		}
-	
-		// Optionally set data-theme on <html> for broader compatibility (not required for this fix)
-		if (theme === "system") {
-			document.documentElement.removeAttribute("data-theme");
-		} else {
-			document.documentElement.setAttribute("data-theme", theme);
-		}
-	}
 
 	// Activate the view
 	// Activate the view

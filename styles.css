@@ -1,18 +1,19 @@
-/* Update these styles in your style.css */
+/* Easy Keep View Main Container */
 .easy-keep-view-main {
     overflow-y: auto;
     height: 100%;
-    padding: 0 !important;  /* Remove all padding */
-    margin: 0 !important;   /* Remove all margins */
+    padding: 0 !important;
+    margin: 0 !important;
 }
 
+/* Grid Container */
 .easy-keep-cards-container {
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(125px, 1fr));
     gap: 16px;
-    padding: 12px;  /* Uniform padding on all sides */
-    align-content: start;  /* Align grid to top */
-    min-height: 100%;  /* Ensure container takes full height */
+    padding: 12px;
+    align-content: start;
+    min-height: 100%;
     box-sizing: border-box;
 }
 
@@ -21,19 +22,18 @@
     width: 100%;
     min-height: 160px;
     padding: 8px;
-    border: 1px solid var(--border-color, #ddd);
+    border: 1px solid var(--divider-color);
     border-radius: 12px;
-    background-color: var(--bg-color, #f9f9f9);
+    background-color: var(--background-primary);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     cursor: pointer;
-    color: var(--text-color, #333);
+    color: var(--text-normal);
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     box-sizing: border-box;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
 }
-
-
 
 /* Hover Effects */
 .easy-keep-card:hover {
@@ -41,12 +41,12 @@
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
 }
 
-/* Card Title Styling */
+/* Card Title */
 .easy-keep-card h3 {
     font-size: 14px;
     font-weight: 700;
     margin-bottom: 6px;
-    color: var(--heading-color, #333);
+    color: var(--h3-color);
     line-height: 1.2;
     display: -webkit-box;
     -webkit-line-clamp: 3;
@@ -56,7 +56,7 @@
     text-overflow: ellipsis;
 }
 
-/* Thumbnail Styling */
+/* Thumbnail */
 .easy-keep-thumbnail {
     max-width: 100%;
     max-height: 80px;
@@ -66,10 +66,10 @@
     display: block;
 }
 
-/* Card Content Styling */
+/* Card Excerpt */
 .easy-keep-card p {
     font-size: 12px;
-    color: var(--text-color, #555);
+    color: var(--text-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
@@ -85,108 +85,42 @@
     align-items: center;
     justify-content: center;
     flex-direction: column;
-    border: 2px dashed var(--border-color, #ddd);
+    border: 2px dashed var(--divider-color);
     padding: 8px;
-    background-color: var(--new-note-bg, #f3f3f3);
+    background-color: var(--background-secondary);
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-    color: var(--new-note-text-color, #555);
+    color: var(--text-muted);
     cursor: pointer;
 }
 
 .new-note-card h3 {
-    font-size: 36px; /* Increased from 18px to 36px for a bigger "+" */
+    font-size: 36px;
     margin-bottom: 6px;
-    color: var(--new-note-text-color, #555);
-    line-height: 1; /* Ensures the larger icon doesn’t stretch the layout */
+    color: var(--text-muted);
+    line-height: 1;
 }
-
 
 .new-note-card p {
     font-size: 12px;
     text-align: center;
-    font-weight: 700; /* Changed from 500 to 700 for bold */
-    color: var(--new-note-text-color, #555); /* Explicitly set to ensure consistency */
+    font-weight: 700;
+    color: var(--text-muted);
 }
 
-/* No Notes Available Message */
+/* No Notes Message */
 .no-history-message {
     font-size: 14px;
-    color: var(--text-color, #555);
+    color: var(--text-muted);
     text-align: center;
     padding: 10px;
     width: 100%;
 }
 
-/* Thumbnail Image Styling */
+/* Thumbnail Image (Full Background) */
 .thumbnail-image {
     width: 100%;
     height: 100%;
     object-fit: cover;
-}
-
-/* Light Theme */
-.easy-keep-cards-container.theme-light {
-    background-color: white !important;
-    color: #333 !important;
-}
-
-.easy-keep-cards-container.theme-light .easy-keep-card {
-    background-color: #f9f9f9 !important;
-    border-color: #ddd !important;
-}
-
-.easy-keep-cards-container.theme-light .easy-keep-card h3 {
-    color: #333 !important;
-}
-
-.easy-keep-cards-container.theme-light .easy-keep-card p {
-    color: #555 !important;
-}
-
-.easy-keep-cards-container.theme-light .new-note-card {
-    background-color: #f3f3f3 !important;
-    border-color: #ddd !important;
-}
-
-.easy-keep-cards-container.theme-light .no-history-message {
-    color: #555 !important;
-}
-
-/* Dark Theme */
-.easy-keep-cards-container.theme-dark {
-    background-color: transparent !important;
-    color: inherit !important;
-}
-
-
-.easy-keep-cards-container.theme-dark .easy-keep-card {
-    background-color: #333 !important;
-    border-color: #444 !important;
-}
-
-.easy-keep-cards-container.theme-dark .easy-keep-card h3 {
-    color: #fff !important;
-}
-
-.easy-keep-cards-container.theme-dark .easy-keep-card p {
-    color: #ccc !important;
-}
-
-.easy-keep-cards-container.theme-dark .new-note-card {
-    background-color: #444 !important;
-    border-color: #555 !important;
-}
-
-.easy-keep-cards-container.theme-dark .no-history-message {
-    color: #ccc !important;
-}
-
-/* System Theme - Follows system's preference */
-/* System Theme (optional fallback) */
-[data-theme="system"] .easy-keep-cards-container,
-.theme-system .easy-keep-cards-container {
-    background-color: var(--bg-system, #f9f9f9);
-    color: var(--text-system, #333);
 }
 
 /* Mobile Responsiveness */
@@ -244,31 +178,5 @@
 
     .new-note-card {
         padding: 6px;
-    }
-}
-
-/* Dark Mode Theme Styling */
-@media (prefers-color-scheme: dark) {
-    .easy-keep-card {
-        background-color: var(--bg-dark, #2c2c2c);
-        border-color: var(--border-dark, #444);
-        color: var(--text-dark, #ccc);
-    }
-
-    .easy-keep-card h3 {
-        color: var(--heading-dark, #fff);
-    }
-
-    .easy-keep-card p {
-        color: var(--text-dark, #ccc);
-    }
-
-    .new-note-card {
-        background-color: var(--new-note-dark-bg, #333);
-        border-color: var(--border-dark, #444);
-    }
-
-    .no-history-message {
-        color: var(--text-dark, #ccc);
     }
 }

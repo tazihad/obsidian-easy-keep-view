@@ -14,14 +14,12 @@ export interface NoteEntry {
 export interface EasyKeepViewPluginSettings {
     mySetting: string;
     notesDB: NoteEntry[];
-    themeMode: "system" | "light" | "dark";
     openAsHomepage: boolean;
 }
 
 export const DEFAULT_SETTINGS: EasyKeepViewPluginSettings = {
     mySetting: "default",
     notesDB: [],
-    themeMode: "system",
     openAsHomepage: false,
 };
 
@@ -36,23 +34,6 @@ export class EasySettingTab extends PluginSettingTab {
     display(): void {
         const { containerEl } = this;
         containerEl.empty();
-
-        // Theme mode selector
-        new Setting(containerEl)
-            .setName("Theme Mode")
-            .setDesc("Select a theme mode for the Easy Keep View")
-            .addDropdown(dropdown => {
-                dropdown.addOption("system", "System (adapt)");
-                dropdown.addOption("light", "Light");
-                dropdown.addOption("dark", "Dark");
-                dropdown.setValue(this.plugin.settings.themeMode);
-                dropdown.onChange(async (value: "system" | "light" | "dark") => {
-                    this.plugin.settings.themeMode = value;
-                    await this.plugin.saveSettings();
-                    this.plugin.applyTheme();
-                    this.plugin.refreshEasyKeepViewIfOpen();
-                });
-            });
 
         // Homepage toggle
         new Setting(containerEl)
