@@ -298,79 +298,95 @@ export default class EasyKeepViewPlugin extends Plugin {
     }
 
 	// Refresh note thumbnails based on content
-	// Refresh note thumbnails based on content
 	async refreshThumbnails() {
-		for (const note of this.settings.notesDB) {
-			const file = this.app.vault.getAbstractFileByPath(note.path);
-			if (!(file instanceof TFile)) continue;
-
-			const content = await this.app.vault.cachedRead(file);
-			const lines = content.trim().split("\n").filter(line => line.trim() !== "");
-
-			// Get the first non-empty line (content or image)
-			const firstLine = lines.find(line => line.trim() !== "");
-
-			let excerpt = "";
-			let imageLink: string | undefined;
-
-			// If the first line contains an embedded image, don't show the thumbnail, just text
-			if (firstLine && firstLine.includes("![[") && firstLine.includes("]]")) {
-				// Excerpt should just be the content text before the image link
-				excerpt = lines.slice(0, 1).join(" ");
-			} else {
-				// Create excerpt from first lines (up to 2 lines of content)
-				if (firstLine) {
-					excerpt = firstLine;
-					if (lines.length > 1) excerpt += " \u2026"; // Add ellipsis if there are more lines
-				}
-
-				// Check if an image is embedded anywhere else in the content (not just the first line)
-				const match = content.match(/!\[\[([^\]]+)\]\]/);
-				if (match) {
-					imageLink = match[1].trim();
-					if (imageLink && note.imageLink !== imageLink) {
-						note.imageLink = imageLink;
-					}
-				}
-			}
-
-			// Update the note with excerpt and imageLink if found
-			if (imageLink) {
-				note.imageLink = imageLink;
-			}
-
-			if (excerpt) {
-				note.excerpt = excerpt;
-			}
-		}
-
-		await this.saveSettings();
-	}
+        for (const note of this.settings.notesDB) {
+            const file = this.app.vault.getAbstractFileByPath(note.path);
+            if (!(file instanceof TFile)) continue;
+    
+            // Skip processing for image files
+            if (/\.(jpg|jpeg|png|webp)$/i.test(file.path)) {
+                note.excerpt = ""; // Ensure excerpt is empty for images
+                note.imageLink = file.path; // Set imageLink to the file itself
+                continue;
+            }
+    
+            // Process non-image files (e.g., Markdown)
+            const content = await this.app.vault.cachedRead(file);
+            const lines = content.trim().split("\n").filter(line => line.trim() !== "");
+    
+            // Get the first non-empty line (content or image)
+            const firstLine = lines.find(line => line.trim() !== "");
+    
+            let excerpt = "";
+            let imageLink: string | undefined;
+    
+            // If the first line contains an embedded image, don't show the thumbnail, just text
+            if (firstLine && firstLine.includes("![[") && firstLine.includes("]]")) {
+                // Excerpt should just be the content text before the image link
+                excerpt = lines.slice(0, 1).join(" ");
+            } else {
+                // Create excerpt from first lines (up to 2 lines of content)
+                if (firstLine) {
+                    excerpt = firstLine;
+                    if (lines.length > 1) excerpt += " …"; // Add ellipsis if there are more lines
+                }
+    
+                // Check if an image is embedded anywhere else in the content
+                const match = content.match(/!\[\[([^\]]+)\]\]/);
+                if (match) {
+                    imageLink = match[1].trim();
+                    if (imageLink && note.imageLink !== imageLink) {
+                        note.imageLink = imageLink;
+                    }
+                }
+            }
+    
+            // Update the note with excerpt and imageLink if found
+            if (imageLink) {
+                note.imageLink = imageLink;
+            } else {
+                note.imageLink = undefined; // Clear imageLink if none found
+            }
+    
+            if (excerpt) {
+                note.excerpt = excerpt;
+            } else {
+                note.excerpt = ""; // Ensure excerpt is empty if no content
+            }
+        }
+    
+        await this.saveSettings();
+    }
 
 
 
 	// Add note to the database
 	async addToDatabase(file: TFile) {
-        const content = await this.app.vault.cachedRead(file);
-        const lines = content.trim().split("\n").filter(line => line.trim() !== "");
         let excerpt = "";
         let imageLink: string | undefined;
-
+    
+        // Check if the file is an image
         if (/\.(jpg|jpeg|png|webp)$/i.test(file.path)) {
-            imageLink = file.path;
+            imageLink = file.path; // Set the image file itself as the imageLink
         } else {
+            // For non-image files (e.g., Markdown), read content and process
+            const content = await this.app.vault.cachedRead(file);
+            const lines = content.trim().split("\n").filter(line => line.trim() !== "");
+    
+            // Look for embedded images in Obsidian or Markdown syntax
             const obsidianEmbedMatch = content.match(/!\[\[([^\]]+)\]\]/);
             const markdownImageMatch = content.match(/!\[.*?\]\((.*?)\)/);
             if (obsidianEmbedMatch || markdownImageMatch) {
                 imageLink = (obsidianEmbedMatch?.[1] || markdownImageMatch?.[1])?.trim();
             }
+    
+            // Generate excerpt for non-empty text content
+            if (lines.length > 0) {
+                excerpt = lines.slice(0, 2).join(" ");
+                if (lines.length > 2) excerpt = excerpt.trim() + " …";
+            }
         }
-
-        if (!imageLink && lines.length > 0) {
-            excerpt = lines.slice(0, 2).join(" ");
-            if (lines.length > 2) excerpt = excerpt.trim() + " …";
-        }
-
+    
         const titleWithoutExt = file.name.replace(/\.(md|png|jpg|jpeg|webp)$/i, "");
         const newEntry: NoteEntry = {
             path: file.path,
@@ -379,7 +395,8 @@ export default class EasyKeepViewPlugin extends Plugin {
             time: Date.now(),
             imageLink,
         };
-
+    
+        // Remove any existing entry for this file to avoid duplicates
         this.settings.notesDB = this.settings.notesDB.filter(entry => entry.path !== file.path);
         this.settings.notesDB.unshift(newEntry);
         await this.saveSettings();
@@ -396,11 +413,22 @@ export default class EasyKeepViewPlugin extends Plugin {
 
 	// Clean up the database by removing notes that no longer exist
 	async cleanDatabase() {
-		const files = this.app.vault.getMarkdownFiles();
-		const existingPaths = new Set(files.map(file => file.path));
-		this.settings.notesDB = this.settings.notesDB.filter(entry => existingPaths.has(entry.path));
-		await this.saveSettings();
-	}
+        // Get all files and filter for Markdown and image files
+        const files = this.app.vault.getFiles().filter(file => 
+            /\.(md|jpg|jpeg|png|webp)$/i.test(file.path)
+        );
+        const existingPaths = new Set(files.map(file => file.path));
+        this.settings.notesDB = this.settings.notesDB.filter(entry => {
+            if (!existingPaths.has(entry.path)) return false;
+            // Reset excerpt for image files to ensure no binary data
+            if (/\.(jpg|jpeg|png|webp)$/i.test(entry.path)) {
+                entry.excerpt = "";
+                entry.imageLink = entry.path; // Ensure imageLink points to the image
+            }
+            return true;
+        });
+        await this.saveSettings();
+    }
 
 	// Open a note in a new tab
 	async openNoteInNewTab(filePath: string) {
