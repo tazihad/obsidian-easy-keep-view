@@ -1,6 +1,5 @@
-import { App, Plugin, WorkspaceLeaf, ItemView, TFile } from "obsidian";
+import { App, Plugin, WorkspaceLeaf, ItemView, TFile, debounce } from "obsidian";
 import { DEFAULT_SETTINGS, EasySettingTab, NoteEntry, EasyKeepViewPluginSettings } from "./settings";  // Import from settings
-
 const VIEW_TYPE_EASY_KEEP = "easy-keep-view";
 
 // Helper function to resolve image by name
@@ -13,15 +12,6 @@ function resolveImageByName(app: App, imageName: string): TFile | null {
         }
     }
     return null;
-}
-
-// Debounce function for throttling updates
-function debounce(fn: (...args: any[]) => void, delay = 300): (...args: any[]) => void {
-    let timer: NodeJS.Timeout;
-    return (...args: any[]) => {
-        clearTimeout(timer);
-        timer = setTimeout(() => fn(...args), delay);
-    };
 }
 
 
