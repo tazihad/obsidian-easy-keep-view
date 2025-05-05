@@ -2,7 +2,6 @@ import { App, Plugin, WorkspaceLeaf, ItemView, TFile, debounce, Notice } from "o
 import { DEFAULT_SETTINGS, EasySettingTab, NoteEntry, EasyKeepViewPluginSettings } from "./settings";  // Import from settings
 const VIEW_TYPE_EASY_KEEP = "easy-keep-view";
 
-// Helper function to resolve image by name
 function resolveImageByName(app: App, imageName: string): TFile | null {
     const target = imageName.replace(/\.(jpg|jpeg|png|webp)$/i, "").toLowerCase();
     const candidates = app.vault.getFiles().filter(f => /\.(jpg|jpeg|png|webp)$/i.test(f.name));
@@ -14,13 +13,11 @@ function resolveImageByName(app: App, imageName: string): TFile | null {
     return null;
 }
 
-
-
 class EasyKeepView extends ItemView {
     plugin: EasyKeepViewPlugin;
     private mainContainer: HTMLElement;
     private cardContainer: HTMLElement | null = null;
-    private cards: Map<string, HTMLElement> = new Map(); // Cache cards by note path
+    private cards: Map<string, HTMLElement> = new Map();
 
     constructor(leaf: WorkspaceLeaf, plugin: EasyKeepViewPlugin) {
         super(leaf);
@@ -32,17 +29,16 @@ class EasyKeepView extends ItemView {
     }
 
     getDisplayText(): string {
-        return "Easy Keep View";
+        return "Easy keep view";
     }
 
-    // Build or update a single note card
     private createOrUpdateCard(note: NoteEntry): HTMLElement {
         let card = this.cards.get(note.path);
         if (!card) {
             card = this.cardContainer!.createDiv("easy-keep-card");
             this.cards.set(note.path, card);
         } else {
-            card.empty(); // Clear existing content for update
+            card.empty();
         }
 
         card.createEl("h3", { text: note.title });
@@ -57,7 +53,6 @@ class EasyKeepView extends ItemView {
                 const img = card.createEl("img", { cls: "easy-keep-thumbnail" });
                 img.src = resourcePath;
                 img.onerror = () => {
-                    console.warn("[Easy Keep View] Failed to load thumbnail:", resourcePath);
                     img.remove();
                     if (note.excerpt) card.createEl("p", { text: note.excerpt });
                 };
@@ -69,35 +64,29 @@ class EasyKeepView extends ItemView {
             card.createEl("p", { text: note.excerpt });
         }
 
-        // Use addEventListener instead of onclick to fix TypeScript error
         card.addEventListener('click', () => this.plugin.openNoteInNewTab(note.path));
 
         return card;
     }
 
-    // Build the content of the view
     async buildContent() {
         this.mainContainer.addClass("easy-keep-view-main");
         if (!this.cardContainer) {
             this.cardContainer = this.mainContainer.createDiv("easy-keep-cards-container");
         } else {
-            // Clear existing cards except new-note-card to prevent duplicates
             const existingCards = this.cardContainer.querySelectorAll(".easy-keep-card:not(.new-note-card)");
             existingCards.forEach(card => card.remove());
         }
 
-        // New Note Card (always first)
         let newNoteCard = this.cardContainer.querySelector(".new-note-card");
         if (!newNoteCard) {
             newNoteCard = this.cardContainer.createDiv("easy-keep-card new-note-card");
             newNoteCard.createEl("h3", { text: "+" });
-            newNoteCard.createEl("p", { text: "Add New Note" });
+            newNoteCard.createEl("p", { text: "Add new note" });
             newNoteCard.addEventListener('click', () => this.plugin.createNewNote());
         }
-        // Ensure newNoteCard is the first child
         this.cardContainer.insertBefore(newNoteCard, this.cardContainer.firstChild);
 
-        // Refresh thumbnails in the background
         await this.plugin.refreshThumbnails();
 
         const notes = this.plugin.settings.notesDB
@@ -105,16 +94,13 @@ class EasyKeepView extends ItemView {
             .sort((a, b) => b.time - a.time)
             .slice(0, 100);
 
-        // Update or create cards for existing notes
         const currentPaths = new Set<string>();
         notes.forEach(note => {
             currentPaths.add(note.path);
             const card = this.createOrUpdateCard(note);
-            // Append after newNoteCard
             this.cardContainer!.appendChild(card);
         });
 
-        // Remove cards for notes that no longer exist
         for (const [path, card] of this.cards) {
             if (!currentPaths.has(path)) {
                 card.remove();
@@ -122,13 +108,11 @@ class EasyKeepView extends ItemView {
             }
         }
 
-        // Show "No notes" message if needed
         let noHistory = this.cardContainer.querySelector(".no-history-message");
         if (notes.length === 0) {
             if (!noHistory) {
                 noHistory = this.cardContainer.createDiv("no-history-message");
                 noHistory.setText("No notes, create a new one!");
-                // Insert after newNoteCard
                 if (newNoteCard && newNoteCard.nextSibling) {
                     this.cardContainer.insertBefore(noHistory, newNoteCard.nextSibling);
                 } else {
@@ -140,13 +124,12 @@ class EasyKeepView extends ItemView {
         }
     }
 
-    // Incremental refresh of the content
     async refreshContent() {
         if (!this.cardContainer) {
             await this.buildContent();
             return;
         }
-        await this.buildContent(); // Reuses existing cards
+        await this.buildContent();
     }
 
     async onOpen() {
@@ -161,8 +144,6 @@ class EasyKeepView extends ItemView {
     }
 }
 
-
-
 export default class EasyKeepViewPlugin extends Plugin {
 	settings: EasyKeepViewPluginSettings;
 	private refreshDebounced: () => void;
@@ -174,7 +155,7 @@ export default class EasyKeepViewPlugin extends Plugin {
 
         this.app.workspace.onLayoutReady(async () => {
             await this.cleanDatabase();
-            await this.refreshThumbnails(); // Preload thumbnails
+            await this.refreshThumbnails();
             this.refreshEasyKeepViewIfOpen();
 
             if (this.settings.openAsHomepage) {
@@ -182,14 +163,13 @@ export default class EasyKeepViewPlugin extends Plugin {
             }
         });
 
-        const ribbonIconEl = this.addRibbonIcon("sticky-note", "Easy Keep View", () => {
+        const ribbonIconEl = this.addRibbonIcon("sticky-note", "Easy keep view", () => {
             this.activateEasyKeepView();
         });
 
-        // Register commands here
         this.addCommand({
             id: "open-easy-keep-view",
-            name: "Open Easy Keep View",
+            name: "Open easy keep view",
             callback: () => this.activateEasyKeepView(),
         });
 
@@ -199,7 +179,6 @@ export default class EasyKeepViewPlugin extends Plugin {
             callback: () => this.createNewNote(),
         });
 
-        // Update database on file-open
         this.registerEvent(this.app.workspace.on("file-open", async (file) => {
             if (file) {
                 await this.addToDatabase(file);
@@ -207,7 +186,6 @@ export default class EasyKeepViewPlugin extends Plugin {
             }
         }));
 
-        // Update database on file deletion
         this.registerEvent(this.app.vault.on("delete", async (file) => {
             if (file instanceof TFile) {
                 await this.removeFromDatabase(file.path);
@@ -215,7 +193,6 @@ export default class EasyKeepViewPlugin extends Plugin {
             }
         }));
 
-        // Update database on file rename (notes)
         this.registerEvent(this.app.vault.on("rename", async (file, oldPath) => {
             if (file instanceof TFile) {
                 const entryIndex = this.settings.notesDB.findIndex(e => e.path === oldPath);
@@ -228,7 +205,6 @@ export default class EasyKeepViewPlugin extends Plugin {
             }
         }));
 
-        // Update database on file rename (images)
         this.registerEvent(this.app.vault.on("rename", async (file, oldPath) => {
             if (file instanceof TFile && /\.(jpg|jpeg|png|webp)$/i.test(file.path)) {
                 let updated = false;
@@ -245,34 +221,28 @@ export default class EasyKeepViewPlugin extends Plugin {
             }
         }));
 
-        // Update database and thumbnails on file modification
         this.registerEvent(this.app.vault.on("modify", async (file) => {
             if (file instanceof TFile) {
-                await this.addToDatabase(file); // Updates notesDB
-                await this.refreshThumbnails(); // Updates image links and excerpts
-                this.refreshDebounced(); // Refreshes view if open
+                await this.addToDatabase(file);
+                await this.refreshThumbnails();
+                this.refreshDebounced();
             }
         }));
 
-        // Initialize debounced refresh
         this.refreshDebounced = debounce(() => this.refreshEasyKeepViewIfOpen(), 300);
 
         this.addSettingTab(new EasySettingTab(this.app, this));
     }
 
-	// Activate the view
-	// Activate the view
     async activateEasyKeepView() {
         const existingLeaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_EASY_KEEP);
         if (existingLeaves.length > 0) {
             const leaf = existingLeaves[0];
             this.app.workspace.revealLeaf(leaf);
     
-            // Ensure the view is refreshed before scrolling
             const view = leaf.view as EasyKeepView;
             await view.refreshContent();
     
-            // Scroll after DOM is refreshed
             requestAnimationFrame(() => {
                 const cardContainer = view.containerEl.querySelector(".easy-keep-cards-container");
                 if (cardContainer) {
@@ -298,10 +268,6 @@ export default class EasyKeepViewPlugin extends Plugin {
         });
     }
     
-
-
-
-	// Refresh the view if open
 	async refreshEasyKeepViewIfOpen() {
         const existingLeaves = this.app.workspace.getLeavesOfType(VIEW_TYPE_EASY_KEEP);
         if (existingLeaves.length > 0) {
@@ -310,7 +276,6 @@ export default class EasyKeepViewPlugin extends Plugin {
         }
     }
 
-	// Refresh note thumbnails based on content
 	async refreshThumbnails() {
 		for (const note of this.settings.notesDB) {
 			const file = this.app.vault.getAbstractFileByPath(note.path);
@@ -319,24 +284,19 @@ export default class EasyKeepViewPlugin extends Plugin {
 			const content = await this.app.vault.cachedRead(file);
 			const lines = content.trim().split("\n").filter(line => line.trim() !== "");
 
-			// Get the first non-empty line (content or image)
 			const firstLine = lines.find(line => line.trim() !== "");
 
 			let excerpt = "";
 			let imageLink: string | undefined;
 
-			// If the first line contains an embedded image, don't show the thumbnail, just text
 			if (firstLine && firstLine.includes("![[") && firstLine.includes("]]")) {
-				// Excerpt should just be the content text before the image link
 				excerpt = lines.slice(0, 1).join(" ");
 			} else {
-				// Create excerpt from first lines (up to 2 lines of content)
 				if (firstLine) {
 					excerpt = firstLine;
-					if (lines.length > 1) excerpt += " \u2026"; // Add ellipsis if there are more lines
+					if (lines.length > 1) excerpt += " \u2026";
 				}
 
-				// Check if an image is embedded anywhere else in the content (not just the first line)
 				const match = content.match(/!\[\[([^\]]+)\]\]/);
 				if (match) {
 					imageLink = match[1].trim();
@@ -346,7 +306,6 @@ export default class EasyKeepViewPlugin extends Plugin {
 				}
 			}
 
-			// Update the note with excerpt and imageLink if found
 			if (imageLink) {
 				note.imageLink = imageLink;
 			}
@@ -361,27 +320,22 @@ export default class EasyKeepViewPlugin extends Plugin {
 
 
 
-	// Add note to the database
 	async addToDatabase(file: TFile) {
         let excerpt = "";
         let imageLink: string | undefined;
     
-        // Check if the file is an image
         if (/\.(jpg|jpeg|png|webp)$/i.test(file.path)) {
-            imageLink = file.path; // Set the image file itself as the imageLink
+            imageLink = file.path;
         } else {
-            // For non-image files (e.g., Markdown), read content and process
             const content = await this.app.vault.cachedRead(file);
             const lines = content.trim().split("\n").filter(line => line.trim() !== "");
     
-            // Look for embedded images in Obsidian or Markdown syntax
             const obsidianEmbedMatch = content.match(/!\[\[([^\]]+)\]\]/);
             const markdownImageMatch = content.match(/!\[.*?\]\((.*?)\)/);
             if (obsidianEmbedMatch || markdownImageMatch) {
                 imageLink = (obsidianEmbedMatch?.[1] || markdownImageMatch?.[1])?.trim();
             }
     
-            // Generate excerpt for non-empty text content
             if (lines.length > 0) {
                 excerpt = lines.slice(0, 2).join(" ");
                 if (lines.length > 2) excerpt = excerpt.trim() + " …";
@@ -402,7 +356,6 @@ export default class EasyKeepViewPlugin extends Plugin {
         await this.saveSettings();
     }
 
-	// Remove note from the database
 	async removeFromDatabase(filePath: string) {
 		const initialLength = this.settings.notesDB.length;
 		this.settings.notesDB = this.settings.notesDB.filter(entry => entry.path !== filePath);
@@ -411,76 +364,60 @@ export default class EasyKeepViewPlugin extends Plugin {
 		}
 	}
 
-	// Clean up the database by removing notes that no longer exist
 	async cleanDatabase() {
-        // Get all files and filter for Markdown and image files
         const files = this.app.vault.getFiles().filter(file => 
             /\.(md|jpg|jpeg|png|webp)$/i.test(file.path)
         );
         const existingPaths = new Set(files.map(file => file.path));
         this.settings.notesDB = this.settings.notesDB.filter(entry => {
             if (!existingPaths.has(entry.path)) return false;
-            // Reset excerpt for image files to ensure no binary data
             if (/\.(jpg|jpeg|png|webp)$/i.test(entry.path)) {
                 entry.excerpt = "";
-                entry.imageLink = entry.path; // Ensure imageLink points to the image
+                entry.imageLink = entry.path;
             }
             return true;
         });
         await this.saveSettings();
     }
 
-	// Open a note in a new tab
 	async openNoteInNewTab(filePath: string) {
         const file = this.app.vault.getAbstractFileByPath(filePath);
         if (!(file instanceof TFile)) {
-            console.warn("[Easy Keep View] File not found:", filePath);
             new Notice(`File not found: ${filePath}`);
             return;
         }
 
         let existingLeaf: WorkspaceLeaf | null = null;
 
-        // Check if the file is already open in a leaf
         this.app.workspace.iterateAllLeaves(leaf => {
             const viewType = leaf.view.getViewType();
             const viewState = leaf.view.getState();
-            // Check for markdown or image view types
             if ((viewType === "markdown" || viewType === "image") && viewState?.file === filePath) {
                 existingLeaf = leaf;
             }
         });
 
         if (existingLeaf) {
-            // Focus the existing leaf
             this.app.workspace.setActiveLeaf(existingLeaf, { focus: true });
         } else {
             try {
-                // Open in a new leaf
                 const newLeaf = this.app.workspace.getLeaf(true);
                 await newLeaf.openFile(file);
                 this.app.workspace.setActiveLeaf(newLeaf, { focus: true });
             } catch (error) {
-                console.error("[Easy Keep View] Failed to open file:", filePath, error);
                 new Notice(`Cannot open ${file.name}: Unsupported format or error.`);
             }
         }
     }
-	
-	
-	
 
-	// Load settings from storage
 	async loadSettings() {
 		this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
 	}
 
-	// Save settings to storage
 	async saveSettings() {
 		await this.saveData(this.settings);
 	}
 
-	// Generate a unique name for an untitled note
 	generateUniqueUntitledName(): string {
 		const baseName = "Untitled";
 		const files = this.app.vault.getMarkdownFiles();
@@ -497,7 +434,6 @@ export default class EasyKeepViewPlugin extends Plugin {
 		return `${baseName} ${counter}`;
 	}
 
-	// Create a new note
 	async createNewNote() {
 		const title = this.generateUniqueUntitledName();
 		const filePath = `${title}.md`;

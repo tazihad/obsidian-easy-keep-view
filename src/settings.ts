@@ -1,7 +1,7 @@
 // src/settings.ts
 
 import { App, PluginSettingTab, Setting, Notice } from "obsidian";
-import EasyKeepViewPlugin from "./main";  // Import your main plugin to access settings
+import EasyKeepViewPlugin from "./main";
 
 export interface NoteEntry {
     path: string;
@@ -36,16 +36,15 @@ export class EasySettingTab extends PluginSettingTab {
         const { containerEl } = this;
         containerEl.empty();
 
-        // Homepage toggle
         new Setting(containerEl)
-            .setName("Use Easy Keep View as Home Page")
-            .setDesc("Automatically open Easy Keep View when Obsidian starts")
+            .setName("Use easy keep view as home page")
+            .setDesc("Automatically open easy keep view when obsidian starts")
             .addToggle(toggle => {
                 toggle.setValue(this.plugin.settings.openAsHomepage);
                 toggle.onChange(async (value) => {
                     this.plugin.settings.openAsHomepage = value;
                     await this.plugin.saveSettings();
-                    new Notice("Restart Obsidian to apply the homepage setting.");
+                    new Notice("Restart obsidian to apply the homepage setting.");
                 });
             });
     }
