@@ -1,7 +1,7 @@
 {
 	"id": "easy-keep-view",
 	"name": "Easy Keep View",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"minAppVersion": "1.8.9",
 	"description": "Easy Keep View mimics the Google Keep interface, allowing you to view and manage your notes with image thumbnails and excerpts.",
 	"author": "@tazihad",
