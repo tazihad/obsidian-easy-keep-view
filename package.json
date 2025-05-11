@@ -1,6 +1,6 @@
 {
 	"name": "obsidian-easy-keep-view",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "An Obsidian plugin for mimicking the Google Keep interface, allowing you to view and manage your notes with image thumbnails and excerpts.",
 	"main": "main.js",
 	"scripts": {
