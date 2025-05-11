@@ -392,9 +392,9 @@ export default class EasyKeepViewPlugin extends Plugin {
         this.app.workspace.iterateAllLeaves(leaf => {
             const viewType = leaf.view.getViewType();
             const viewState = leaf.view.getState();
-            if ((viewType === "markdown" || viewType === "image") && viewState?.file === filePath) {
+            if (viewState?.file === filePath) {
                 existingLeaf = leaf;
-            }
+              }
         });
 
         if (existingLeaf) {
